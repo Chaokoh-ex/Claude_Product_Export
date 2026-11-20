@@ -104,6 +104,18 @@ label.f small{font-weight:400;color:var(--mute)}
 .ptext p{margin:0;font-size:clamp(17px,1.6vw,21px)}
 .pbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}
 .pbar span{margin-right:auto;color:var(--mute);font-variant-numeric:tabular-nums}
+/* select for presenting */
+.card{position:relative}
+.pick{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--card) 85%,transparent);border:2px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--onGreen)}
+.card.picked{outline:3px solid var(--green);outline-offset:-1px}
+.card.picked .pick{background:var(--green);border-color:var(--green)}
+#selBtn.on{background:var(--green);border-color:var(--green);color:var(--onGreen)}
+#selBar{position:sticky;bottom:0;z-index:6;background:var(--ink);color:var(--bg)}
+#selBar .wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px max(4vw,16px)}
+#selBar b{margin-right:auto}
+#selBar button{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
+#selBar button.pri{background:var(--green);border-color:var(--green);color:var(--onGreen)}
+.grid{padding-bottom:8px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;max-width:calc(100% - 24px)}
 @media(max-width:700px){.dgrid,.pslide{grid-template-columns:1fr}.dgrid .ph{min-height:220px}.pslide .ph{height:42vh}.two{grid-template-columns:1fr}.top .navtxt{display:none}}
 @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
@@ -141,12 +153,20 @@ label.f small{font-weight:400;color:var(--mute)}
       <div class="tools">
         <input id="q" type="search" placeholder="ค้นหาชื่อสินค้า ประเทศ หรือไอเดีย" aria-label="ค้นหา">
         <select id="sort" aria-label="เรียงลำดับ"><option value="new">ใหม่ล่าสุด</option><option value="top">น่าสนใจที่สุด</option></select>
+        <button id="selBtn" aria-pressed="false"><i data-lucide="list-checks"></i>เลือกรายการนำเสนอ</button>
       </div>
     </div></section>
     <section class="band" style="padding-top:0"><div class="wrap">
       <div class="grid" id="grid"></div>
       <p class="sample" id="sampleNote" hidden>ข้อมูลในโหมดตัวอย่างเป็นตัวอย่างประกอบ ไม่ใช่ข้อมูลจริง</p>
     </div></section>
+    <div id="selBar" hidden><div class="wrap">
+      <b id="selCount">กดที่การ์ดเพื่อเลือก ลำดับที่กดคือลำดับการนำเสนอ</b>
+      <button id="selAll">เลือกทั้งหมดที่แสดง</button>
+      <button id="selClear">ล้าง</button>
+      <button class="pri" id="selGo"><i data-lucide="presentation"></i>นำเสนอที่เลือก</button>
+      <button id="selDone">เสร็จ</button>
+    </div></div>
   </main>
 
   <main id="formView" hidden>
@@ -204,6 +224,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const icons=()=>{try{window.lucide&&lucide.createIcons()}catch(e){}};
 let token=null,role=null,items=[],cat='all',sort='new',q='',editing=null,rating=0,newImage=null,pList=[],pIdx=0,tt=null;
 const imgs={};
+let selMode=false,picked=[];
+try{picked=JSON.parse(localStorage.getItem('tr-picked')||'[]')}catch(e){}
+function savePicked(){try{localStorage.setItem('tr-picked',JSON.stringify(picked))}catch(e){}}
 
 /* ---------- โหมดตัวอย่าง (ใช้เมื่อเปิดนอก Apps Script) ---------- */
 function ph(c1,c2,label){
@@ -288,20 +311,40 @@ function render(){
   const cats=['all',...CATS.filter(c=>items.some(x=>x.category===c)),...new Set(items.map(x=>x.category).filter(c=>c&&!CATS.includes(c)))];
   $('#chips').innerHTML=cats.map(c=>{const n=c==='all'?items.length:items.filter(x=>x.category===c).length;return `<button class="chip ${c===cat?'on':''}" data-cat="${esc(c)}">${c==='all'?'ทั้งหมด':esc(c)} <em>${n}</em></button>`}).join('');
   const v=visible();
-  $('#grid').innerHTML=v.length?v.map(x=>`<button class="card" data-id="${esc(x.id)}">
+  picked=picked.filter(id=>items.some(x=>x.id===id));
+  $('#grid').innerHTML=v.length?v.map(x=>{const n=picked.indexOf(x.id)+1;return `<button class="card ${selMode&&n?'picked':''}" data-id="${esc(x.id)}" ${selMode?`aria-pressed="${!!n}"`:''}>
+    ${selMode?`<span class="pick" aria-hidden="true">${n||''}</span>`:''}
     <div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
     <div class="cb"><div class="meta"><span class="tag">${esc(x.category||'ไม่ระบุหมวด')}</span><span>${esc(x.country)}</span></div>
-    <h3>${esc(x.name)}</h3>${x.why?`<p>${esc(x.why)}</p>`:''}${x.interest?dots(x.interest):''}</div></button>`).join('')
+    <h3>${esc(x.name)}</h3>${x.why?`<p>${esc(x.why)}</p>`:''}${x.interest?dots(x.interest):''}</div></button>`}).join('')
     :`<div class="empty" style="grid-column:1/-1">${items.length?'ไม่พบสินค้าที่ตรงกับการค้นหา':role==='admin'?'ยังไม่มีสินค้า กด "เพิ่มสินค้า" เพื่อเริ่ม':'ยังไม่มีสินค้า'}</div>`;
-  icons();fillImages(document);
+  updateSel();icons();fillImages(document);
 }
+function updateSel(){
+  $('#selBtn').classList.toggle('on',selMode);$('#selBtn').setAttribute('aria-pressed',selMode);
+  $('#selBar').hidden=!selMode;
+  $('#selCount').textContent=picked.length?`เลือกแล้ว ${picked.length} รายการ (นำเสนอตามลำดับที่กด)`:'กดที่การ์ดเพื่อเลือก ลำดับที่กดคือลำดับการนำเสนอ';
+  $('#selGo').disabled=!picked.length;
+  $('#navPresent').querySelector('.navtxt').textContent=picked.length?`นำเสนอ (${picked.length})`:'นำเสนอ';
+}
+$('#selBtn').addEventListener('click',()=>{selMode=!selMode;render()});
+$('#selDone').addEventListener('click',()=>{selMode=false;render()});
+$('#selClear').addEventListener('click',()=>{picked=[];savePicked();render()});
+$('#selAll').addEventListener('click',()=>{visible().forEach(x=>{if(!picked.includes(x.id))picked.push(x.id)});savePicked();render()});
+$('#selGo').addEventListener('click',()=>$('#navPresent').click());
 function getImg(id){if(!imgs[id])imgs[id]=call('getImage',token,id).catch(()=>{delete imgs[id];return ''});return imgs[id]}
 function fillImages(root){root.querySelectorAll('img[data-img]:not([src])').forEach(async el=>{const u=await getImg(el.dataset.img);if(u)el.src=u})}
 
 $('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(b){cat=b.dataset.cat;render()}});
 $('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
 $('#sort').addEventListener('change',e=>{sort=e.target.value;render()});
-$('#grid').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)openDetail(c.dataset.id)});
+$('#grid').addEventListener('click',e=>{
+  const c=e.target.closest('.card');if(!c)return;
+  if(!selMode)return openDetail(c.dataset.id);
+  const id=c.dataset.id,i=picked.indexOf(id);
+  if(i>=0)picked.splice(i,1);else picked.push(id);
+  savePicked();render();
+});
 
 /* ---------- รายละเอียด ---------- */
 function openDetail(id){
@@ -377,7 +420,8 @@ function slide(){
   pList.slice(pIdx+1,pIdx+3).forEach(y=>y.imageId&&getImg(y.imageId));
 }
 $('#navPresent').addEventListener('click',()=>{
-  pList=visible();if(!pList.length)return toast('ไม่มีสินค้าให้นำเสนอ');
+  pList=picked.length?picked.map(id=>items.find(x=>x.id===id)).filter(Boolean):visible();
+  if(!pList.length)return toast('ไม่มีสินค้าให้นำเสนอ');
   pIdx=0;$('#present').hidden=false;slide();
   try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}
 });
