@@ -10,11 +10,10 @@
 <style>
 /* VOICE: a calm product catalogue for executives — clear, confident, few words
    IDEA: a trade-fair lookbook: each find is a large photo card with its origin and fit for the company
-   PICTURE: the photo grid itself; present mode turns each card into a full-screen slide
+   PICTURE: the photo grid itself; present mode turns the selection into a deck with an opening map and a closing summary
    COLOUR and TYPE: coconut-flesh white, husk-dark ink, palm green accent, sand for ratings; Anuphan + IBM Plex Sans Thai
    LAYOUT: login card -> header with filters -> photo grid; form in one calm column */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121513);--soft:light-dark(#f3f5f1,#1a1f1c);--card:light-dark(#ffffff,#1a1f1c);--ink:light-dark(#1b211d,#e8eee9);--mute:light-dark(#5d6961,#9aa79f);--line:light-dark(#dfe5df,#2a322d);--green:light-dark(#1d6b45,#56b886);--onGreen:light-dark(#ffffff,#0e1a13);--sand:#d39a2f}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121513);--soft:light-dark(#f3f5f1,#1a1f1c);--card:light-dark(#ffffff,#1a1f1c);--ink:light-dark(#1b211d,#e8eee9);--mute:light-dark(#5d6961,#9aa79f);--line:light-dark(#dfe5df,#2a322d);--green:light-dark(#1d6b45,#56b886);--onGreen:light-dark(#ffffff,#0e1a13);--sand:#d39a2f;--land:light-dark(#e3e8e2,#262d29)}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:Anuphan,"IBM Plex Sans Thai",sans-serif;line-height:1.2;margin:0;text-wrap:balance}
@@ -25,20 +24,19 @@ button,.btn{font:inherit;font-size:15px;min-height:44px;padding:0 16px;border-ra
 button.pri{background:var(--green);border-color:var(--green);color:var(--onGreen);font-weight:600}
 button.ghost{background:transparent;border-color:transparent}
 button.danger{color:#c2410c}
+button.on{background:var(--green);border-color:var(--green);color:var(--onGreen)}
 button:disabled{opacity:.5;cursor:default}
 :focus-visible{outline:3px solid var(--sand);outline-offset:2px}
 svg.lucide{width:18px;height:18px;flex:none}
 input,select,textarea{font:inherit;font-size:16px;min-height:46px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
 textarea{min-height:96px;resize:vertical}
 label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
-label.f small{font-weight:400;color:var(--mute)}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--soft)}
 .lcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(24px,5vw,40px);width:min(420px,100%);display:flex;flex-direction:column;gap:16px}
 .mark{width:56px;height:56px;border-radius:16px;background:var(--green);color:var(--onGreen);display:grid;place-items:center}
 .mark svg{width:28px;height:28px}
-.lcard h1{font-size:30px}
-.lcard p{margin:0;color:var(--mute)}
+.lcard h1{font-size:30px}.lcard p{margin:0;color:var(--mute)}
 .err{color:#c2410c;font-size:15px;min-height:1.5em}
 .hint{font-size:14px;background:var(--soft);border-radius:10px;padding:10px 12px;color:var(--mute)}
 /* header */
@@ -54,36 +52,76 @@ label.f small{font-weight:400;color:var(--mute)}
 .chip em{font-style:normal;color:var(--mute);margin-left:2px}
 .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}.chip.on em{color:inherit;opacity:.7}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.tools input{flex:1 1 260px;width:auto}.tools select{flex:0 1 200px;width:auto}
+.tools input{flex:1 1 240px;width:auto}.tools select{flex:0 1 190px;width:auto}
+/* map */
+.mapbox{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--soft)}
+.fig{position:relative;min-height:300px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.mapbox .fig{min-height:clamp(220px,32vw,360px)}
+.mlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:14px}
+.mlist span{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.mlist b{color:var(--green)}
+.dot{fill:var(--green);fill-opacity:.85;stroke:var(--card);stroke-width:2}
+.dotn{fill:var(--onGreen);font:600 12px "IBM Plex Sans Thai",sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 /* grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
-.card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;padding-bottom:8px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .2s,box-shadow .2s}
 .card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgb(0 0 0/.08)}
 .card:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
 .ph{aspect-ratio:4/3;background:var(--soft);display:grid;place-items:center;color:var(--mute);overflow:hidden}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px}
-.meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute)}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute);flex-wrap:wrap}
 .tag{color:var(--green);font-weight:600}
 .card h3{font-size:19px}
 .card p{margin:0;font-size:15px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--mute)}
+.foot span{display:inline-flex;align-items:center;gap:4px}.foot svg{width:15px;height:15px}
 .dots{display:inline-flex;gap:3px;align-items:center}
 .dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
 .dots i.on{background:var(--sand)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.st::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--sc)}
+.card .st{position:absolute;top:12px;right:12px;background:var(--card);padding:4px 10px;border-radius:99px;box-shadow:0 2px 8px rgb(0 0 0/.12)}
+.s0{--sc:#8a948d}.s1{--sc:#2f6fdb}.s2{--sc:#d39a2f}.s3{--sc:#1d9b5a}.s4{--sc:#c2410c}
 .empty{text-align:center;padding:60px 16px;color:var(--mute);border:1px dashed var(--line);border-radius:16px}
 .sample{font-size:13px;color:var(--mute);margin-top:18px}
+/* select */
+.pick{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--card) 85%,transparent);border:2px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--onGreen);z-index:1}
+.card.picked{outline:3px solid var(--green);outline-offset:-1px}
+.card.picked .pick{background:var(--green);border-color:var(--green)}
+#selBar{position:sticky;bottom:0;z-index:6;background:var(--ink);color:var(--bg)}
+#selBar .wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px max(4vw,16px)}
+#selBar b{margin-right:auto}
+#selBar button{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
+#selBar button.pri{background:var(--green);border-color:var(--green);color:var(--onGreen)}
 /* overlays */
 .ov{position:fixed;inset:0;z-index:20;background:rgb(10 14 12/.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
-.panel{background:var(--card);border-radius:18px;width:min(860px,100%);overflow:hidden}
+.panel{background:var(--card);border-radius:18px;width:min(900px,100%);overflow:hidden}
 .dgrid{display:grid;grid-template-columns:1.1fr 1fr}
-.dgrid .ph{aspect-ratio:auto;min-height:320px}
+.gal{display:flex;flex-direction:column;background:var(--soft)}
+.gal .ph{aspect-ratio:4/3}
+.thumbs{display:flex;gap:6px;padding:8px;flex-wrap:wrap}
+.thumbs button{all:unset;cursor:pointer;width:64px;height:48px;border-radius:8px;overflow:hidden;border:2px solid transparent;background:var(--card)}
+.thumbs button.on{border-color:var(--green)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
 .dbody{padding:clamp(18px,3vw,28px);display:flex;flex-direction:column;gap:12px}
 .dbody h2{font-size:28px}
 .dbody h4{margin:0;font-size:14px;color:var(--mute);font-weight:500}
 .dbody p{margin:2px 0 0}
-.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px;margin:0}
 .facts dt{color:var(--mute)}.facts dd{margin:0}
 .dact{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.dst{display:flex;gap:8px;align-items:center}.dst select{width:auto;min-height:40px;padding:6px 10px}
+.talk{border-top:1px solid var(--line);padding:clamp(18px,3vw,28px);display:flex;flex-direction:column;gap:12px}
+.talk h3{font-size:18px}
+.likes{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--mute);font-size:14px}
+.cmts{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.cmts li{background:var(--soft);border-radius:12px;padding:10px 12px;display:flex;gap:8px}
+.cmts li div{flex:1}.cmts b{font-size:14px}.cmts small{color:var(--mute);margin-left:6px}
+.cmts p{margin:2px 0 0;white-space:pre-wrap}
+.cmts button{min-height:36px;padding:0 8px}
+.cform{display:grid;grid-template-columns:200px 1fr auto;gap:8px;align-items:start}
+.cform textarea{min-height:46px}
 /* form */
 .form{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -92,33 +130,66 @@ label.f small{font-weight:400;color:var(--mute)}
 .rate button.on{background:var(--sand);border-color:var(--sand);color:#1b211d;font-weight:600}
 .drop{border:2px dashed var(--line);border-radius:14px;padding:16px;display:flex;gap:16px;align-items:center;cursor:pointer}
 .drop .ph{width:140px;aspect-ratio:4/3;border-radius:10px;flex:none}
-.drop input{display:none}
+.drop input,#fileX{display:none}
+.xgrid{display:flex;gap:10px;flex-wrap:wrap}
+.xi{position:relative;width:120px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--soft)}
+.xi img{width:100%;height:100%;object-fit:cover}
+.xi button{position:absolute;top:4px;right:4px;min-height:30px;width:30px;padding:0;border-radius:50%}
+.xadd{width:120px;aspect-ratio:4/3;border-style:dashed;flex-direction:column;gap:2px;font-size:13px}
 .fbar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px}
 /* present */
 #present{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column}
+#pSlide{flex:1;min-height:0;display:flex}
 .pslide{flex:1;display:grid;grid-template-columns:1.2fr 1fr;min-height:0}
-.pslide .ph{aspect-ratio:auto;height:100%}
+.pimg{position:relative;background:var(--soft);min-height:0}
+.pimg>.ph{aspect-ratio:auto;height:100%}
+.pimg .thumbs{position:absolute;left:12px;bottom:12px;background:color-mix(in srgb,var(--card) 80%,transparent);border-radius:12px}
 .ptext{padding:clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:center;gap:18px;overflow-y:auto}
 .ptext h2{font-size:clamp(32px,4.5vw,56px)}
 .ptext h4{margin:0 0 4px;font-size:15px;color:var(--green);font-weight:600}
 .ptext p{margin:0;font-size:clamp(17px,1.6vw,21px)}
+.intro{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(20px,4vw,56px);padding:clamp(24px,5vw,64px);overflow-y:auto;align-items:center}
+.intro h2{font-size:clamp(34px,5vw,60px)}
+.intro .sub{color:var(--mute);font-size:18px;margin:10px 0 24px}
+.kpis{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:24px}
+.kpis b{display:block;font-family:Anuphan,sans-serif;font-size:clamp(34px,4vw,48px);line-height:1;color:var(--green)}
+.kpis span{color:var(--mute);font-size:15px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,190px) 1fr 28px;gap:10px;align-items:center;font-size:15px}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--green)}
+.bar em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+.intro .fig{min-height:clamp(240px,40vh,460px)}
+.outro{flex:1;padding:clamp(24px,5vw,64px);overflow-y:auto;display:flex;flex-direction:column;gap:20px;max-width:1100px;margin:0 auto;width:100%}
+.outro h2{font-size:clamp(32px,4.5vw,52px)}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.rank li{display:grid;grid-template-columns:40px 96px minmax(0,1fr) auto;gap:16px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.rank .n{font-family:Anuphan,sans-serif;font-size:28px;color:var(--green);text-align:center}
+.rank .ph{width:96px;border-radius:8px}
+.rank h3{font-size:20px}.rank p{margin:2px 0 0;color:var(--mute);font-size:15px}
+.rank .r{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .pbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}
 .pbar span{margin-right:auto;color:var(--mute);font-variant-numeric:tabular-nums}
-/* select for presenting */
-.card{position:relative}
-.pick{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--card) 85%,transparent);border:2px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--onGreen)}
-.card.picked{outline:3px solid var(--green);outline-offset:-1px}
-.card.picked .pick{background:var(--green);border-color:var(--green)}
-#selBtn.on{background:var(--green);border-color:var(--green);color:var(--onGreen)}
-#selBar{position:sticky;bottom:0;z-index:6;background:var(--ink);color:var(--bg)}
-#selBar .wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px max(4vw,16px)}
-#selBar b{margin-right:auto}
-#selBar button{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
-#selBar button.pri{background:var(--green);border-color:var(--green);color:var(--onGreen)}
-.grid{padding-bottom:8px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;max-width:calc(100% - 24px)}
-@media(max-width:700px){.dgrid,.pslide{grid-template-columns:1fr}.dgrid .ph{min-height:220px}.pslide .ph{height:42vh}.two{grid-template-columns:1fr}.top .navtxt{display:none}}
+#printArea{display:none}
+@media(max-width:760px){.dgrid,.pslide,.intro{grid-template-columns:1fr}.pimg{height:42vh;flex:none}.two{grid-template-columns:1fr}.top .navtxt{display:none}.cform{grid-template-columns:1fr}.rank li{grid-template-columns:28px 64px minmax(0,1fr)}.rank .r{grid-column:2/-1;flex-direction:row;align-items:center}.rank .ph{width:64px}}
 @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+/* print / PDF */
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;color:#111}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+  .pp{break-after:page;display:flex;flex-direction:column;gap:12px;font-size:12pt}
+  .pp:last-child{break-after:auto}
+  .pp h1{font-size:28pt}.pp h2{font-size:22pt}
+  .pp .pmain{width:100%;height:95mm;object-fit:cover;border-radius:4mm}
+  .pp .pex{display:flex;gap:3mm}.pp .pex img{width:30mm;height:22mm;object-fit:cover;border-radius:2mm}
+  .pp table{border-collapse:collapse;width:100%}.pp td{padding:1.5mm 2mm;border-bottom:.3mm solid #ddd;vertical-align:top}.pp td:first-child{color:#555;width:38mm}
+  .pp .lbl{color:#1d6b45;font-weight:600;margin-top:2mm}
+  .pp .muted{color:#555}
+  .pp .cv{display:flex;flex-direction:column;justify-content:center;min-height:240mm;gap:8mm}
+  .pp .cvbar{display:grid;grid-template-columns:60mm 1fr 10mm;gap:3mm;align-items:center}.pp .cvbar i{display:block;height:4mm;background:#1d6b45;border-radius:2mm;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
 </style>
 </head>
 <body>
@@ -141,6 +212,7 @@ label.f small{font-weight:400;color:var(--mute)}
     <div class="brand"><span class="mark"><i data-lucide="sprout"></i></span><span>เทรนด์สินค้า</span></div>
     <span class="role" id="roleLbl"></span>
     <button id="navAdd" class="pri" hidden><i data-lucide="plus"></i><span class="navtxt">เพิ่มสินค้า</span></button>
+    <button id="navPrint"><i data-lucide="printer"></i><span class="navtxt">PDF</span></button>
     <button id="navPresent"><i data-lucide="presentation"></i><span class="navtxt">นำเสนอ</span></button>
     <button id="navOut" class="ghost" aria-label="ออกจากระบบ"><i data-lucide="log-out"></i></button>
   </div></header>
@@ -152,8 +224,14 @@ label.f small{font-weight:400;color:var(--mute)}
       <div class="chips" id="chips"></div>
       <div class="tools">
         <input id="q" type="search" placeholder="ค้นหาชื่อสินค้า ประเทศ หรือไอเดีย" aria-label="ค้นหา">
-        <select id="sort" aria-label="เรียงลำดับ"><option value="new">ใหม่ล่าสุด</option><option value="top">น่าสนใจที่สุด</option></select>
+        <select id="stF" aria-label="กรองตามสถานะ"></select>
+        <select id="sort" aria-label="เรียงลำดับ"><option value="new">ใหม่ล่าสุด</option><option value="top">น่าสนใจที่สุด</option><option value="like">มีคนสนใจมากที่สุด</option></select>
+        <button id="mapBtn" aria-pressed="false"><i data-lucide="map"></i>แผนที่</button>
         <button id="selBtn" aria-pressed="false"><i data-lucide="list-checks"></i>เลือกรายการนำเสนอ</button>
+      </div>
+      <div class="mapbox" id="mapBox" hidden>
+        <div class="fig" id="mapFig" role="img" aria-label="แผนที่ประเทศต้นทางของสินค้า"></div>
+        <div class="mlist" id="mapList"></div>
       </div>
     </div></section>
     <section class="band" style="padding-top:0"><div class="wrap">
@@ -161,7 +239,7 @@ label.f small{font-weight:400;color:var(--mute)}
       <p class="sample" id="sampleNote" hidden>ข้อมูลในโหมดตัวอย่างเป็นตัวอย่างประกอบ ไม่ใช่ข้อมูลจริง</p>
     </div></section>
     <div id="selBar" hidden><div class="wrap">
-      <b id="selCount">กดที่การ์ดเพื่อเลือก ลำดับที่กดคือลำดับการนำเสนอ</b>
+      <b id="selCount"></b>
       <button id="selAll">เลือกทั้งหมดที่แสดง</button>
       <button id="selClear">ล้าง</button>
       <button class="pri" id="selGo"><i data-lucide="presentation"></i>นำเสนอที่เลือก</button>
@@ -172,19 +250,24 @@ label.f small{font-weight:400;color:var(--mute)}
   <main id="formView" hidden>
     <section class="band"><form class="form" id="pform">
       <div><h1 id="fTitle" style="font-size:34px">เพิ่มสินค้าที่เจอ</h1><p style="color:var(--mute);margin:6px 0 0">บันทึกแล้วข้อมูลไปที่ Google Sheet และรูปไปที่ Google Drive</p></div>
-      <div class="drop" id="drop" tabindex="0" role="button" aria-label="เลือกรูปสินค้า">
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="เลือกรูปหลักของสินค้า">
         <div class="ph" id="fImg"><i data-lucide="image-plus"></i></div>
-        <div><b>รูปสินค้า</b><br><span style="color:var(--mute);font-size:15px">กดเพื่อเลือกรูป หรือลากไฟล์มาวาง</span></div>
+        <div><b>รูปหลัก</b><br><span style="color:var(--mute);font-size:15px">กดเพื่อเลือกรูป หรือลากไฟล์มาวาง</span></div>
         <input type="file" id="file" accept="image/*">
+      </div>
+      <div class="f" style="display:flex;flex-direction:column;gap:8px;font-weight:500">รูปเพิ่มเติม <span style="font-weight:400;color:var(--mute);font-size:14px">สูงสุด 4 รูป เช่น ด้านหลัง ฉลาก หรือตอนใช้งาน</span>
+        <div class="xgrid" id="fExtra"></div><input type="file" id="fileX" accept="image/*" multiple>
       </div>
       <label class="f">ชื่อสินค้า *<input id="f-name" required></label>
       <div class="two">
-        <label class="f">ประเทศ<input id="f-country" placeholder="เช่น ญี่ปุ่น"></label>
+        <label class="f">ประเทศ<input id="f-country" list="countryList" placeholder="เช่น ญี่ปุ่น"></label>
         <label class="f">แบรนด์<input id="f-brand"></label>
         <label class="f">หมวด<select id="f-category"></select></label>
         <label class="f">บรรจุภัณฑ์<select id="f-packaging"></select></label>
+        <label class="f">สถานะ<select id="f-status"></select></label>
+        <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:500">ความน่าสนใจ<div class="rate" id="rate"></div></div>
       </div>
-      <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:500">ความน่าสนใจ<div class="rate" id="rate"></div></div>
+      <datalist id="countryList"></datalist>
       <label class="f">ทำไมน่าสนใจ<textarea id="f-why" placeholder="จุดเด่น เทรนด์ที่อยู่เบื้องหลัง กลุ่มลูกค้า"></textarea></label>
       <label class="f">ไอเดียสำหรับบริษัท<textarea id="f-idea" placeholder="ต่อยอดกับวัตถุดิบหรือไลน์ผลิตไหนได้บ้าง"></textarea></label>
       <label class="f">ลิงก์แหล่งที่มา<input id="f-source" type="url" placeholder="https://"></label>
@@ -196,12 +279,10 @@ label.f small{font-weight:400;color:var(--mute)}
   </main>
 </div>
 
-<!-- รายละเอียด -->
 <div class="ov" id="detail" hidden><div class="panel" id="dPanel"></div></div>
 
-<!-- โหมดนำเสนอ -->
 <div id="present" hidden>
-  <div class="pslide" id="pSlide"></div>
+  <div id="pSlide"></div>
   <div class="pbar">
     <span id="pCount"></span>
     <button id="pPrev" aria-label="ก่อนหน้า"><i data-lucide="chevron-left"></i></button>
@@ -210,79 +291,99 @@ label.f small{font-weight:400;color:var(--mute)}
   </div>
 </div>
 
+<div id="printArea"></div>
 <div id="toast" hidden role="status"></div>
 
 <script>
 {
-const CATS=['กะทิและผลิตภัณฑ์มะพร้าว','น้ำมะพร้าวและเครื่องดื่ม','น้ำจิ้มและซอส','ผักผลไม้กระป๋อง','อื่นๆ'];
-const PACKS=['กระป๋อง','ขวดแก้ว','กล่อง UHT','ซองหรือถุง','อื่นๆ'];
 /* ===== ตั้งค่า: วาง Web app URL ของ Apps Script ระหว่างเครื่องหมายคำพูด (เว้นว่าง = โหมดตัวอย่าง) ===== */
 const API_URL='https://script.google.com/macros/s/AKfycbwFLwabnUaMqTpa9dd5WcG9pz-Ny8mrhHWb3rtz2bXwWM7hyzajtOcynu-AgoJAbFGU7g/exec';
 const DEMO=!API_URL;
+const CATS=['กะทิและผลิตภัณฑ์มะพร้าว','น้ำมะพร้าวและเครื่องดื่ม','น้ำจิ้มและซอส','ผักผลไม้กระป๋อง','อื่นๆ'];
+const PACKS=['กระป๋อง','ขวดแก้ว','กล่อง UHT','ซองหรือถุง','อื่นๆ'];
+const STATUSES=['กำลังศึกษา','ขอตัวอย่างแล้ว','เสนอแล้ว','อนุมัติให้พัฒนา','ไม่ไปต่อ'];
+/* ประเทศ: [รหัส ISO ตัวเลข, ละติจูด, ลองจิจูด] */
+const GEO={'ไทย':[764,15.8,101],'ญี่ปุ่น':[392,36.2,138.3],'เกาหลีใต้':[410,36.5,127.9],'จีน':[156,35.9,104.2],'ไต้หวัน':[158,23.7,121],'ฮ่องกง':[344,22.3,114.2],'สิงคโปร์':[702,1.35,103.8],'มาเลเซีย':[458,4.2,102],'อินโดนีเซีย':[360,-2.5,118],'ฟิลิปปินส์':[608,12.9,121.8],'เวียดนาม':[704,14.1,108.3],'กัมพูชา':[116,12.6,105],'ลาว':[418,19.9,102.5],'เมียนมา':[104,21.9,95.9],'อินเดีย':[356,21,78],'ศรีลังกา':[144,7.9,80.8],'ออสเตรเลีย':[36,-25.3,133.8],'นิวซีแลนด์':[554,-41,174],'สหรัฐอเมริกา':[840,39.8,-98.6],'แคนาดา':[124,56,-106],'เม็กซิโก':[484,23.6,-102.5],'บราซิล':[76,-14.2,-51.9],'เปรู':[604,-9.2,-75],'ชิลี':[152,-35.7,-71.5],'อาร์เจนตินา':[32,-38.4,-63.6],'โคลอมเบีย':[170,4.6,-74.3],'สหราชอาณาจักร':[826,54,-2],'ไอร์แลนด์':[372,53.4,-8.2],'ฝรั่งเศส':[250,46.2,2.2],'เยอรมนี':[276,51.2,10.4],'อิตาลี':[380,41.9,12.6],'สเปน':[724,40.5,-3.7],'โปรตุเกส':[620,39.4,-8.2],'เนเธอร์แลนด์':[528,52.1,5.3],'เบลเยียม':[56,50.5,4.5],'สวิตเซอร์แลนด์':[756,46.8,8.2],'ออสเตรีย':[40,47.5,14.6],'เดนมาร์ก':[208,56,9.5],'สวีเดน':[752,60.1,18.6],'นอร์เวย์':[578,60.5,8.5],'ฟินแลนด์':[246,61.9,25.7],'โปแลนด์':[616,51.9,19.1],'กรีซ':[300,39.1,21.8],'ตุรกี':[792,39,35.2],'รัสเซีย':[643,61.5,105.3],'สหรัฐอาหรับเอมิเรตส์':[784,23.4,53.8],'ซาอุดีอาระเบีย':[682,23.9,45.1],'อิสราเอล':[376,31,34.9],'อียิปต์':[818,26.8,30.8],'แอฟริกาใต้':[710,-30.6,22.9]};
+const ALIAS={'อเมริกา':'สหรัฐอเมริกา','สหรัฐ':'สหรัฐอเมริกา','สหรัฐฯ':'สหรัฐอเมริกา','usa':'สหรัฐอเมริกา','us':'สหรัฐอเมริกา','อังกฤษ':'สหราชอาณาจักร','uk':'สหราชอาณาจักร','เกาหลี':'เกาหลีใต้','korea':'เกาหลีใต้','japan':'ญี่ปุ่น','china':'จีน','ยูเออี':'สหรัฐอาหรับเอมิเรตส์','ดูไบ':'สหรัฐอาหรับเอมิเรตส์','ฮอลแลนด์':'เนเธอร์แลนด์','พม่า':'เมียนมา','thailand':'ไทย'};
+const geoOf=c=>{c=String(c||'').trim();const k=GEO[c]?c:ALIAS[c.toLowerCase()];return k?{name:k,g:GEO[k]}:null};
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons=()=>{try{window.lucide&&lucide.createIcons()}catch(e){}};
-let token=null,role=null,items=[],cat='all',sort='new',q='',editing=null,rating=0,newImage=null,pList=[],pIdx=0,tt=null;
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let token=null,role=null,items=[],cmts=[],cat='all',stF='all',sort='new',q='',editing=null,rating=0,newImage=null,extraKeep=[],extraNew=[],slides=[],pIdx=0,tt=null,selMode=false,mapOn=false;
+let picked=ls.get('tr-picked',[]),liked=ls.get('tr-liked',[]);
 const imgs={};
-let selMode=false,picked=[];
-try{picked=JSON.parse(localStorage.getItem('tr-picked')||'[]')}catch(e){}
-function savePicked(){try{localStorage.setItem('tr-picked',JSON.stringify(picked))}catch(e){}}
+const stIdx=s=>Math.max(0,STATUSES.indexOf(s));
+const stBadge=s=>`<span class="st s${stIdx(s)}">${esc(s||STATUSES[0])}</span>`;
+const likesOf=id=>cmts.filter(c=>c.productId===id&&c.kind==='like').length;
+const notesOf=id=>cmts.filter(c=>c.productId===id&&c.kind==='comment');
+const dots=n=>`<span class="dots" aria-label="ความน่าสนใจ ${n} จาก 5">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
+const thDate=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})};
 
-/* ---------- โหมดตัวอย่าง (ใช้เมื่อเปิดนอก Apps Script) ---------- */
+/* ---------- โหมดตัวอย่าง (ใช้เมื่อ API_URL ว่าง) ---------- */
 function ph(c1,c2,label){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><ellipse cx="200" cy="250" rx="110" ry="16" fill="#000" opacity=".12"/><rect x="150" y="70" width="100" height="175" rx="18" fill="#fff" opacity=".9"/><rect x="150" y="120" width="100" height="60" fill="${c2}" opacity=".85"/><text x="200" y="157" font-family="sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">${label}</text></svg>`;
   return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
-const demoImgs={d1:ph('#d9f0e3','#1d6b45','SPARK'),d2:ph('#f4eadb','#8a5a2b','BARISTA'),d3:ph('#eef2f7','#5a7bb5','YOGURT'),d4:ph('#fbe3d6','#c2410c','HOT'),d5:ph('#fff1c9','#d39a2f','MANGO'),d6:ph('#ece6f5','#6b4fa0','POWDER')};
+const demoImgs={d1:ph('#d9f0e3','#1d6b45','SPARK'),d1b:ph('#e9f6ee','#2e8b5b','BACK'),d2:ph('#f4eadb','#8a5a2b','BARISTA'),d3:ph('#eef2f7','#5a7bb5','YOGURT'),d4:ph('#fbe3d6','#c2410c','HOT'),d5:ph('#fff1c9','#d39a2f','MANGO'),d6:ph('#ece6f5','#6b4fa0','POWDER')};
 let demoData=[
- {id:'s1',createdAt:'2026-11-18',name:'น้ำมะพร้าวสปาร์กลิง',country:'ญี่ปุ่น',brand:'',category:'น้ำมะพร้าวและเครื่องดื่ม',packaging:'กระป๋อง',interest:5,why:'น้ำมะพร้าวอัดก๊าซ หวานน้อย วางตำแหน่งเป็นเครื่องดื่มทดแทนน้ำอัดลมสำหรับคนรักสุขภาพ',idea:'ต่อยอดน้ำมะพร้าวกระป๋องที่มีอยู่ เพิ่มขั้นตอนอัดก๊าซ',source:'',imageId:'d1'},
- {id:'s2',createdAt:'2026-11-15',name:'กะทิสูตรบาริสตาสำหรับกาแฟ',country:'สหรัฐอเมริกา',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'กล่อง UHT',interest:4,why:'นมจากพืชสำหรับร้านกาแฟ ตีฟองได้ดี ไม่แยกชั้นในกาแฟร้อน',idea:'พัฒนากะทิ UHT สูตรบาริสตา ขายให้ร้านกาแฟและโรงแรม',source:'',imageId:'d2'},
- {id:'s3',createdAt:'2026-11-12',name:'โยเกิร์ตกะทิ',country:'ออสเตรเลีย',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'อื่นๆ',interest:4,why:'โยเกิร์ตจากพืชเนื้อข้น มีจุลินทรีย์ กลุ่มลูกค้าแพ้นมวัว',idea:'ใช้กะทิเข้มข้นเป็นฐาน ร่วมทุนหรือจ้างผลิตส่วนหมัก',source:'',imageId:'d3'},
- {id:'s4',createdAt:'2026-11-08',name:'ซอสพริกน้ำผึ้งเผ็ดหวาน',country:'สหรัฐอเมริกา',brand:'',category:'น้ำจิ้มและซอส',packaging:'ขวดแก้ว',interest:3,why:'รสเผ็ดหวานแบบฮอตฮันนี่กำลังนิยมกับพิซซ่าและไก่ทอด',idea:'ปรับสูตรน้ำจิ้มไก่ให้มีโทนน้ำผึ้ง ทำรุ่นพิเศษสำหรับตลาดอเมริกา',source:'',imageId:'d4'},
- {id:'s5',createdAt:'2026-11-03',name:'มะม่วงในน้ำมะพร้าว',country:'สิงคโปร์',brand:'',category:'ผักผลไม้กระป๋อง',packaging:'กระป๋อง',interest:3,why:'ผลไม้บรรจุในน้ำมะพร้าวแทนน้ำเชื่อม ไม่เติมน้ำตาล',idea:'รวมสองไลน์ที่มีอยู่ ผลไม้กระป๋องกับน้ำมะพร้าว',source:'',imageId:'d5'},
- {id:'s6',createdAt:'2026-10-28',name:'กะทิผงซองพกพา',country:'เกาหลีใต้',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'ซองหรือถุง',interest:2,why:'ซองเล็กชงครั้งเดียว ใช้ในครัวคอนโดและแคมป์ปิ้ง',idea:'กะทิผงขนาดซองเดียวสำหรับตลาดออนไลน์',source:'',imageId:'d6'}];
+ {id:'s1',createdAt:'2026-11-18',name:'น้ำมะพร้าวสปาร์กลิง',country:'ญี่ปุ่น',brand:'',category:'น้ำมะพร้าวและเครื่องดื่ม',packaging:'กระป๋อง',interest:5,status:'เสนอแล้ว',why:'น้ำมะพร้าวอัดก๊าซ หวานน้อย วางตำแหน่งเป็นเครื่องดื่มทดแทนน้ำอัดลมสำหรับคนรักสุขภาพ',idea:'ต่อยอดน้ำมะพร้าวกระป๋องที่มีอยู่ เพิ่มขั้นตอนอัดก๊าซ',source:'',imageId:'d1',images:['d1b']},
+ {id:'s2',createdAt:'2026-11-15',name:'กะทิสูตรบาริสตาสำหรับกาแฟ',country:'สหรัฐอเมริกา',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'กล่อง UHT',interest:4,status:'ขอตัวอย่างแล้ว',why:'นมจากพืชสำหรับร้านกาแฟ ตีฟองได้ดี ไม่แยกชั้นในกาแฟร้อน',idea:'พัฒนากะทิ UHT สูตรบาริสตา ขายให้ร้านกาแฟและโรงแรม',source:'',imageId:'d2',images:[]},
+ {id:'s3',createdAt:'2026-11-12',name:'โยเกิร์ตกะทิ',country:'ออสเตรเลีย',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'อื่นๆ',interest:4,status:'กำลังศึกษา',why:'โยเกิร์ตจากพืชเนื้อข้น มีจุลินทรีย์ กลุ่มลูกค้าแพ้นมวัว',idea:'ใช้กะทิเข้มข้นเป็นฐาน ร่วมทุนหรือจ้างผลิตส่วนหมัก',source:'',imageId:'d3',images:[]},
+ {id:'s4',createdAt:'2026-11-08',name:'ซอสพริกน้ำผึ้งเผ็ดหวาน',country:'สหรัฐอเมริกา',brand:'',category:'น้ำจิ้มและซอส',packaging:'ขวดแก้ว',interest:3,status:'อนุมัติให้พัฒนา',why:'รสเผ็ดหวานแบบฮอตฮันนี่กำลังนิยมกับพิซซ่าและไก่ทอด',idea:'ปรับสูตรน้ำจิ้มไก่ให้มีโทนน้ำผึ้ง ทำรุ่นพิเศษสำหรับตลาดอเมริกา',source:'',imageId:'d4',images:[]},
+ {id:'s5',createdAt:'2026-11-03',name:'มะม่วงในน้ำมะพร้าว',country:'สิงคโปร์',brand:'',category:'ผักผลไม้กระป๋อง',packaging:'กระป๋อง',interest:3,status:'กำลังศึกษา',why:'ผลไม้บรรจุในน้ำมะพร้าวแทนน้ำเชื่อม ไม่เติมน้ำตาล',idea:'รวมสองไลน์ที่มีอยู่ ผลไม้กระป๋องกับน้ำมะพร้าว',source:'',imageId:'d5',images:[]},
+ {id:'s6',createdAt:'2026-10-28',name:'กะทิผงซองพกพา',country:'เกาหลีใต้',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'ซองหรือถุง',interest:2,status:'ไม่ไปต่อ',why:'ซองเล็กชงครั้งเดียว ใช้ในครัวคอนโดและแคมป์ปิ้ง',idea:'กะทิผงซองเดียวสำหรับตลาดออนไลน์',source:'',imageId:'d6',images:[]}];
+let demoC=[{id:'c1',date:'2026-11-19',productId:'s1',kind:'like',name:'ผู้ชม',text:'',role:'viewer'},{id:'c2',date:'2026-11-19',productId:'s1',kind:'comment',name:'ผู้ชม',text:'อยากเห็นต้นทุนต่อกระป๋องคร่าวๆ',role:'viewer'}];
 const demo={
   login(pw){if(pw==='admin')return{token:'demo',role:'admin'};if(pw==='view')return{token:'demo-v',role:'viewer'};throw new Error('รหัสผ่านไม่ถูกต้อง')},
   logout(){return true},
   listProducts(){return JSON.parse(JSON.stringify(demoData))},
   getImage(t,id){return demoImgs[id]||''},
   saveProduct(t,d){
-    let imageId=d.id?(demoData.find(x=>x.id===d.id)||{}).imageId||'':'';
+    const old=demoData.find(x=>x.id===d.id)||{};
+    let imageId=old.imageId||'';
     if(d.image){imageId='u'+Date.now();demoImgs[imageId]='data:image/jpeg;base64,'+d.image.b64}
-    const row={...d,imageId,interest:Number(d.interest)||0};delete row.image;
+    let images=(old.images||[]).filter(i=>(d.keepExtra||[]).includes(i));
+    (d.newExtra||[]).forEach((im,k)=>{if(images.length<4){const id='x'+Date.now()+k;demoImgs[id]='data:image/jpeg;base64,'+im.b64;images.push(id)}});
+    const row={...d,imageId,images,interest:Number(d.interest)||0};delete row.image;delete row.keepExtra;delete row.newExtra;
     const i=demoData.findIndex(x=>x.id===d.id);
     if(i>=0)demoData[i]={...demoData[i],...row};else demoData.unshift({...row,id:'n'+Date.now(),createdAt:new Date().toISOString()});
     return true},
-  deleteProduct(t,id){demoData=demoData.filter(x=>x.id!==id);return true}
+  deleteProduct(t,id){demoData=demoData.filter(x=>x.id!==id);return true},
+  setStatus(t,id,s){const x=demoData.find(y=>y.id===id);if(x)x.status=s;return true},
+  listComments(){return JSON.parse(JSON.stringify(demoC))},
+  addComment(t,pid,kind,name,text){const c={id:'c'+Date.now(),date:new Date().toISOString(),productId:pid,kind,name:name||'ไม่ระบุชื่อ',text:kind==='like'?'':text,role:t==='demo'?'admin':'viewer'};if(kind==='comment'&&!text)throw new Error('กรุณาพิมพ์ความเห็น');demoC.push(c);return c},
+  deleteComment(t,id){demoC=demoC.filter(c=>c.id!==id);return true}
 };
 
 function call(fn,...args){
   return new Promise((res,rej)=>{
-    if(DEMO){setTimeout(()=>{try{res(demo[fn](...args))}catch(e){rej(e)}},250);return}
+    if(DEMO){setTimeout(()=>{try{res(demo[fn](...args))}catch(e){rej(e)}},200);return}
     fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})})
       .then(r=>r.json()).then(d=>d.ok?res(d.result):rej(new Error(d.error)))
       .catch(()=>rej(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง')));
   }).catch(e=>{
     const m=(e&&e.message)||String(e);
     if(m.includes('SESSION_EXPIRED')){signOut('หมดเวลาการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่');throw new Error('')}
+    if(m.includes('ไม่รู้จักคำสั่ง'))throw new Error('ฝั่ง Google ยังเป็นโค้ดเวอร์ชันเก่า ต้องอัปเดต Code.gs และ Deploy เวอร์ชันใหม่');
     throw new Error(m);
   });
 }
-function toast(m){if(!m)return;$('#toast').textContent=m;$('#toast').hidden=false;clearTimeout(tt);tt=setTimeout(()=>$('#toast').hidden=true,3500)}
+function toast(m){if(!m)return;$('#toast').textContent=m;$('#toast').hidden=false;clearTimeout(tt);tt=setTimeout(()=>$('#toast').hidden=true,3800)}
 
 /* ---------- เข้าสู่ระบบ ---------- */
 function store(){try{token?sessionStorage.setItem('tr',JSON.stringify({token,role})):sessionStorage.removeItem('tr')}catch(e){}}
 function signOut(msg){
   if(token)call('logout',token).catch(()=>{});
-  token=role=null;store();items=[];
-  $('#app').hidden=true;$('#present').hidden=true;$('#detail').hidden=true;$('#login').hidden=false;
+  token=role=null;store();items=[];cmts=[];
+  ['#app','#present','#detail'].forEach(s=>$(s).hidden=true);$('#login').hidden=false;
   $('#loginErr').textContent=msg||'';$('#pw').value='';
 }
 async function enter(){
   $('#login').hidden=true;$('#app').hidden=false;
   $('#roleLbl').textContent=role==='admin'?'ผู้ดูแล':'ผู้ชม';
-  $('#navAdd').hidden=role!=='admin';
-  $('#sampleNote').hidden=!DEMO;
+  $('#navAdd').hidden=role!=='admin';$('#sampleNote').hidden=!DEMO;
   showView('catalog');await load();
 }
 $('#loginForm').addEventListener('submit',async e=>{
@@ -293,16 +394,18 @@ $('#loginForm').addEventListener('submit',async e=>{
 });
 $('#navOut').addEventListener('click',()=>signOut());
 
-/* ---------- แคตตาล็อก ---------- */
+/* ---------- โหลดและแสดงแคตตาล็อก ---------- */
 async function load(){
   $('#summary').textContent='กำลังโหลด…';
-  try{items=await call('listProducts',token);render()}
-  catch(e){$('#summary').textContent='โหลดข้อมูลไม่สำเร็จ';toast(e.message)}
+  try{
+    const [p,c]=await Promise.all([call('listProducts',token),call('listComments',token).catch(()=>[])]);
+    items=p.map(x=>({...x,status:x.status||STATUSES[0],images:Array.isArray(x.images)?x.images:[]}));cmts=c;render();
+  }catch(e){$('#summary').textContent='โหลดข้อมูลไม่สำเร็จ';toast(e.message)}
 }
-const dots=n=>`<span class="dots" aria-label="ความน่าสนใจ ${n} จาก 5">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
 function visible(){
-  let v=items.filter(x=>(cat==='all'||x.category===cat)&&(!q||[x.name,x.country,x.brand,x.why,x.idea].join(' ').toLowerCase().includes(q)));
+  let v=items.filter(x=>(cat==='all'||x.category===cat)&&(stF==='all'||x.status===stF)&&(!q||[x.name,x.country,x.brand,x.why,x.idea].join(' ').toLowerCase().includes(q)));
   if(sort==='top')v=[...v].sort((a,b)=>b.interest-a.interest);
+  if(sort==='like')v=[...v].sort((a,b)=>likesOf(b.id)-likesOf(a.id)||b.interest-a.interest);
   return v;
 }
 function render(){
@@ -310,62 +413,140 @@ function render(){
   $('#summary').textContent=items.length?`${items.length} สินค้า จาก ${countries.size} ประเทศ`:'ยังไม่มีสินค้า';
   const cats=['all',...CATS.filter(c=>items.some(x=>x.category===c)),...new Set(items.map(x=>x.category).filter(c=>c&&!CATS.includes(c)))];
   $('#chips').innerHTML=cats.map(c=>{const n=c==='all'?items.length:items.filter(x=>x.category===c).length;return `<button class="chip ${c===cat?'on':''}" data-cat="${esc(c)}">${c==='all'?'ทั้งหมด':esc(c)} <em>${n}</em></button>`}).join('');
-  const v=visible();
+  $('#stF').innerHTML=`<option value="all">ทุกสถานะ</option>`+STATUSES.map(s=>`<option ${s===stF?'selected':''}>${s}</option>`).join('');
   picked=picked.filter(id=>items.some(x=>x.id===id));
-  $('#grid').innerHTML=v.length?v.map(x=>{const n=picked.indexOf(x.id)+1;return `<button class="card ${selMode&&n?'picked':''}" data-id="${esc(x.id)}" ${selMode?`aria-pressed="${!!n}"`:''}>
-    ${selMode?`<span class="pick" aria-hidden="true">${n||''}</span>`:''}
+  const v=visible();
+  $('#grid').innerHTML=v.length?v.map(x=>{const n=picked.indexOf(x.id)+1,lk=likesOf(x.id),nc=notesOf(x.id).length;return `<button class="card ${selMode&&n?'picked':''}" data-id="${esc(x.id)}" ${selMode?`aria-pressed="${!!n}"`:''}>
+    ${selMode?`<span class="pick" aria-hidden="true">${n||''}</span>`:''}${stBadge(x.status)}
     <div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
     <div class="cb"><div class="meta"><span class="tag">${esc(x.category||'ไม่ระบุหมวด')}</span><span>${esc(x.country)}</span></div>
-    <h3>${esc(x.name)}</h3>${x.why?`<p>${esc(x.why)}</p>`:''}${x.interest?dots(x.interest):''}</div></button>`}).join('')
-    :`<div class="empty" style="grid-column:1/-1">${items.length?'ไม่พบสินค้าที่ตรงกับการค้นหา':role==='admin'?'ยังไม่มีสินค้า กด "เพิ่มสินค้า" เพื่อเริ่ม':'ยังไม่มีสินค้า'}</div>`;
-  updateSel();icons();fillImages(document);
+    <h3>${esc(x.name)}</h3>${x.why?`<p>${esc(x.why)}</p>`:''}
+    <div class="foot">${x.interest?dots(x.interest):'<span></span>'}<span>${lk?`<span><i data-lucide="thumbs-up"></i>${lk}</span>`:''}${nc?`<span><i data-lucide="message-circle"></i>${nc}</span>`:''}${x.images.length?`<span><i data-lucide="images"></i>${x.images.length+1}</span>`:''}</span></div></div></button>`}).join('')
+    :`<div class="empty" style="grid-column:1/-1">${items.length?'ไม่พบสินค้าที่ตรงกับตัวกรอง':role==='admin'?'ยังไม่มีสินค้า กด "เพิ่มสินค้า" เพื่อเริ่ม':'ยังไม่มีสินค้า'}</div>`;
+  updateSel();if(mapOn)drawMap($('#mapFig'),$('#mapList'),v);
+  icons();fillImages(document);
 }
-function updateSel(){
-  $('#selBtn').classList.toggle('on',selMode);$('#selBtn').setAttribute('aria-pressed',selMode);
-  $('#selBar').hidden=!selMode;
-  $('#selCount').textContent=picked.length?`เลือกแล้ว ${picked.length} รายการ (นำเสนอตามลำดับที่กด)`:'กดที่การ์ดเพื่อเลือก ลำดับที่กดคือลำดับการนำเสนอ';
-  $('#selGo').disabled=!picked.length;
-  $('#navPresent').querySelector('.navtxt').textContent=picked.length?`นำเสนอ (${picked.length})`:'นำเสนอ';
-}
-$('#selBtn').addEventListener('click',()=>{selMode=!selMode;render()});
-$('#selDone').addEventListener('click',()=>{selMode=false;render()});
-$('#selClear').addEventListener('click',()=>{picked=[];savePicked();render()});
-$('#selAll').addEventListener('click',()=>{visible().forEach(x=>{if(!picked.includes(x.id))picked.push(x.id)});savePicked();render()});
-$('#selGo').addEventListener('click',()=>$('#navPresent').click());
 function getImg(id){if(!imgs[id])imgs[id]=call('getImage',token,id).catch(()=>{delete imgs[id];return ''});return imgs[id]}
 function fillImages(root){root.querySelectorAll('img[data-img]:not([src])').forEach(async el=>{const u=await getImg(el.dataset.img);if(u)el.src=u})}
 
 $('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(b){cat=b.dataset.cat;render()}});
 $('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
+$('#stF').addEventListener('change',e=>{stF=e.target.value;render()});
 $('#sort').addEventListener('change',e=>{sort=e.target.value;render()});
+$('#mapBtn').addEventListener('click',()=>{mapOn=!mapOn;$('#mapBtn').classList.toggle('on',mapOn);$('#mapBtn').setAttribute('aria-pressed',mapOn);$('#mapBox').hidden=!mapOn;render()});
 $('#grid').addEventListener('click',e=>{
   const c=e.target.closest('.card');if(!c)return;
   if(!selMode)return openDetail(c.dataset.id);
   const id=c.dataset.id,i=picked.indexOf(id);
   if(i>=0)picked.splice(i,1);else picked.push(id);
-  savePicked();render();
+  ls.set('tr-picked',picked);render();
 });
 
-/* ---------- รายละเอียด ---------- */
+/* ---------- เลือกรายการนำเสนอ ---------- */
+function updateSel(){
+  $('#selBtn').classList.toggle('on',selMode);$('#selBtn').setAttribute('aria-pressed',selMode);
+  $('#selBar').hidden=!selMode;
+  $('#selCount').textContent=picked.length?`เลือกแล้ว ${picked.length} รายการ (นำเสนอตามลำดับที่กด)`:'กดที่การ์ดเพื่อเลือก ลำดับที่กดคือลำดับการนำเสนอ';
+  $('#selGo').disabled=!picked.length;
+  $('#navPresent .navtxt').textContent=picked.length?`นำเสนอ (${picked.length})`:'นำเสนอ';
+  $('#navPrint .navtxt').textContent=picked.length?`PDF (${picked.length})`:'PDF';
+}
+$('#selBtn').addEventListener('click',()=>{selMode=!selMode;render()});
+$('#selDone').addEventListener('click',()=>{selMode=false;render()});
+$('#selClear').addEventListener('click',()=>{picked=[];ls.set('tr-picked',picked);render()});
+$('#selAll').addEventListener('click',()=>{visible().forEach(x=>{if(!picked.includes(x.id))picked.push(x.id)});ls.set('tr-picked',picked);render()});
+$('#selGo').addEventListener('click',()=>startPresent());
+const chosen=()=>picked.length?picked.map(id=>items.find(x=>x.id===id)).filter(Boolean):visible();
+
+/* ---------- แผนที่ ---------- */
+let geoLib=null;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+function geoReady(){
+  if(!geoLib)geoLib=(async()=>{
+    await loadScript('https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js');
+    const w=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json());
+    return topojson.feature(w,w.objects.countries);
+  })().catch(()=>null);
+  return geoLib;
+}
+function originCounts(list){
+  const m=new Map(),other=new Map();
+  list.forEach(x=>{const g=geoOf(x.country);if(g){const o=m.get(g.name)||{name:g.name,g:g.g,n:0};o.n++;m.set(g.name,o)}else if(x.country.trim()){other.set(x.country.trim(),(other.get(x.country.trim())||0)+1)}});
+  return {pts:[...m.values()].sort((a,b)=>b.n-a.n),other:[...other.entries()]};
+}
+async function drawMap(fig,listEl,list){
+  const {pts,other}=originCounts(list);
+  if(listEl)listEl.innerHTML=[...pts.map(p=>[p.name,p.n]),...other].map(([n,c])=>`<span>${esc(n)} <b>${c}</b></span>`).join('')||'<span>ยังไม่มีข้อมูลประเทศ</span>';
+  let svg=fig.querySelector('svg');if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');fig.appendChild(svg)}
+  const land=await geoReady();
+  const draw=()=>{
+    const W=fig.clientWidth,H=fig.clientHeight;if(!W||!H)return;
+    let proj,paths='';
+    if(land&&window.d3){
+      proj=d3.geoNaturalEarth1().fitExtent([[6,6],[W-6,H-6]],{type:'Sphere'});
+      const path=d3.geoPath(proj),hot=new Set(pts.map(p=>String(p.g[0]).padStart(3,'0')));
+      paths=land.features.map(f=>`<path d="${path(f)}" style="fill:${hot.has(String(f.id).padStart(3,'0'))?'color-mix(in srgb,var(--green) 35%,var(--land))':'var(--land)'};stroke:var(--soft);stroke-width:.6"/>`).join('');
+    }else{
+      const sx=W/360,sy=H/170;proj=([lon,lat])=>[(lon+180)*sx,(85-lat)*sy];
+      for(let lo=-150;lo<=180;lo+=30)paths+=`<line x1="${(lo+180)*sx}" y1="0" x2="${(lo+180)*sx}" y2="${H}" style="stroke:var(--line)"/>`;
+      for(let la=-60;la<=80;la+=30)paths+=`<line x1="0" y1="${(85-la)*sy}" x2="${W}" y2="${(85-la)*sy}" style="stroke:var(--line)"/>`;
+    }
+    const max=Math.max(1,...pts.map(p=>p.n));
+    const dotsSvg=pts.map(p=>{const [x,y]=proj([p.g[2],p.g[1]]);const r=9+11*Math.sqrt(p.n/max);return `<g><title>${esc(p.name)} ${p.n} รายการ</title><circle class="dot" cx="${x}" cy="${y}" r="${r}"/><text class="dotn" x="${x}" y="${y}">${p.n}</text></g>`}).join('');
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=paths+dotsSvg;
+  };
+  draw();if(!fig._ro){fig._ro=new ResizeObserver(()=>fig._draw&&fig._draw());fig._ro.observe(fig)}fig._draw=draw;
+}
+
+/* ---------- รายละเอียด โหวต และความเห็น ---------- */
 function openDetail(id){
   const x=items.find(y=>y.id===id);if(!x)return;
+  const all=[x.imageId,...x.images].filter(Boolean);
   const link=/^https?:\/\//.test(x.source)?`<a class="btn" href="${esc(x.source)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>แหล่งที่มา</a>`:'';
-  const date=x.createdAt?new Date(x.createdAt):null;
-  $('#dPanel').innerHTML=`<div class="dgrid"><div class="ph">${x.imageId?`<img alt="${esc(x.name)}" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
+  const lk=likesOf(x.id),notes=notesOf(x.id),didLike=liked.includes(x.id);
+  const myName=ls.get('tr-name','');
+  $('#dPanel').innerHTML=`<div class="dgrid"><div class="gal"><div class="ph">${all[0]?`<img alt="${esc(x.name)}" id="dMain" data-img="${esc(all[0])}">`:'<i data-lucide="image"></i>'}</div>
+    ${all.length>1?`<div class="thumbs">${all.map((im,i)=>`<button data-sw="${esc(im)}" class="${i?'':'on'}" aria-label="รูปที่ ${i+1}"><img alt="" data-img="${esc(im)}"></button>`).join('')}</div>`:''}</div>
   <div class="dbody"><div class="meta"><span class="tag">${esc(x.category)}</span>${x.interest?dots(x.interest):''}</div>
   <h2>${esc(x.name)}</h2>
-  <dl class="facts"><dt>ประเทศ</dt><dd>${esc(x.country)||'-'}</dd><dt>แบรนด์</dt><dd>${esc(x.brand)||'-'}</dd><dt>บรรจุภัณฑ์</dt><dd>${esc(x.packaging)||'-'}</dd>${date&&!isNaN(date)?`<dt>วันที่บันทึก</dt><dd>${date.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}</dd>`:''}</dl>
+  <div class="dst">${role==='admin'?`<label style="color:var(--mute);font-size:14px" for="dStatus">สถานะ</label><select id="dStatus">${STATUSES.map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select>`:stBadge(x.status)}</div>
+  <dl class="facts"><dt>ประเทศ</dt><dd>${esc(x.country)||'-'}</dd><dt>แบรนด์</dt><dd>${esc(x.brand)||'-'}</dd><dt>บรรจุภัณฑ์</dt><dd>${esc(x.packaging)||'-'}</dd>${thDate(x.createdAt)?`<dt>วันที่บันทึก</dt><dd>${thDate(x.createdAt)}</dd>`:''}</dl>
   ${x.why?`<div><h4>ทำไมน่าสนใจ</h4><p>${esc(x.why)}</p></div>`:''}
   ${x.idea?`<div><h4>ไอเดียสำหรับบริษัท</h4><p>${esc(x.idea)}</p></div>`:''}
-  <div class="dact">${link}${role==='admin'?`<button data-d="edit"><i data-lucide="pencil"></i>แก้ไข</button><button class="danger" data-d="del"><i data-lucide="trash-2"></i>ลบ</button>`:''}<button class="ghost" data-d="close" style="margin-left:auto">ปิด</button></div></div></div>`;
+  <div class="dact">${link}${role==='admin'?`<button data-d="edit"><i data-lucide="pencil"></i>แก้ไข</button><button class="danger" data-d="del"><i data-lucide="trash-2"></i>ลบ</button>`:''}<button class="ghost" data-d="close" style="margin-left:auto">ปิด</button></div></div></div>
+  <div class="talk"><h3>ความเห็นจากทีม</h3>
+    <div class="likes"><button data-d="like" ${didLike?'disabled':''}><i data-lucide="thumbs-up"></i>${didLike?'คุณกดสนใจแล้ว':'สนใจ'}</button><span>${lk?`${lk} คนสนใจ`:'ยังไม่มีคนกดสนใจ'}${lk?': '+esc([...new Set(cmts.filter(c=>c.productId===x.id&&c.kind==='like').map(c=>c.name))].join(', ')):''}</span></div>
+    <ul class="cmts">${notes.map(c=>`<li><div><b>${esc(c.name)}</b><small>${thDate(c.date)}</small><p>${esc(c.text)}</p></div>${role==='admin'?`<button class="ghost" data-dc="${esc(c.id)}" aria-label="ลบความเห็น"><i data-lucide="x"></i></button>`:''}</li>`).join('')||'<li><div style="color:var(--mute)">ยังไม่มีความเห็น</div></li>'}</ul>
+    <form class="cform" id="cForm"><input id="cName" placeholder="ชื่อของคุณ" value="${esc(myName)}" aria-label="ชื่อ" maxlength="60"><textarea id="cText" placeholder="เขียนความเห็นหรือคำถาม" aria-label="ความเห็น" maxlength="1000" required></textarea><button class="pri" type="submit">ส่ง</button></form>
+  </div>`;
   $('#dPanel').dataset.id=id;$('#detail').hidden=false;icons();fillImages($('#dPanel'));
 }
+$('#detail').addEventListener('change',async e=>{
+  if(e.target.id!=='dStatus')return;
+  const id=$('#dPanel').dataset.id,s=e.target.value,x=items.find(y=>y.id===id);
+  try{await call('setStatus',token,id,s);if(x)x.status=s;toast('อัปเดตสถานะแล้ว');render()}catch(err){toast(err.message)}
+});
+$('#detail').addEventListener('submit',async e=>{
+  if(e.target.id!=='cForm')return;e.preventDefault();
+  const id=$('#dPanel').dataset.id,name=$('#cName').value.trim(),text=$('#cText').value.trim();if(!text)return;
+  ls.set('tr-name',name);const b=e.target.querySelector('button');b.disabled=true;
+  try{const c=await call('addComment',token,id,'comment',name,text);cmts.push(c);openDetail(id);render();toast('ส่งความเห็นแล้ว')}catch(err){toast(err.message);b.disabled=false}
+});
 $('#detail').addEventListener('click',async e=>{
   if(e.target===$('#detail'))return($('#detail').hidden=true);
+  const sw=e.target.closest('[data-sw]');
+  if(sw){$('#dMain').src=await getImg(sw.dataset.sw);document.querySelectorAll('#dPanel [data-sw]').forEach(b=>b.classList.toggle('on',b===sw));return}
+  const dc=e.target.closest('[data-dc]');
+  if(dc){dc.disabled=true;try{await call('deleteComment',token,dc.dataset.dc);cmts=cmts.filter(c=>c.id!==dc.dataset.dc);openDetail($('#dPanel').dataset.id);render()}catch(err){toast(err.message);dc.disabled=false}return}
   const b=e.target.closest('[data-d]');if(!b)return;
   const id=$('#dPanel').dataset.id;
   if(b.dataset.d==='close')$('#detail').hidden=true;
   if(b.dataset.d==='edit'){$('#detail').hidden=true;openForm(items.find(x=>x.id===id))}
+  if(b.dataset.d==='like'){
+    b.disabled=true;
+    try{const c=await call('addComment',token,id,'like',$('#cName').value.trim()||ls.get('tr-name',''),'');cmts.push(c);liked.push(id);ls.set('tr-liked',liked);openDetail(id);render()}catch(err){toast(err.message);b.disabled=false}
+  }
   if(b.dataset.d==='del'){
     if(!b.dataset.sure){b.dataset.sure='1';b.innerHTML='กดอีกครั้งเพื่อยืนยันการลบ';return}
     b.disabled=true;
@@ -376,21 +557,41 @@ $('#detail').addEventListener('click',async e=>{
 /* ---------- ฟอร์ม ---------- */
 $('#f-category').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
 $('#f-packaging').innerHTML=PACKS.map(c=>`<option>${c}</option>`).join('');
+$('#f-status').innerHTML=STATUSES.map(c=>`<option>${c}</option>`).join('');
+$('#countryList').innerHTML=Object.keys(GEO).map(c=>`<option value="${c}">`).join('');
 function drawRate(){$('#rate').innerHTML=[1,2,3,4,5].map(i=>`<button type="button" data-r="${i}" class="${i===rating?'on':''}" aria-pressed="${i===rating}">${i}</button>`).join('')}
 $('#rate').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){rating=Number(b.dataset.r)===rating?0:Number(b.dataset.r);drawRate()}});
+function drawExtra(){
+  const n=extraKeep.length+extraNew.length;
+  $('#fExtra').innerHTML=extraKeep.map(id=>`<div class="xi"><img alt="" data-img="${esc(id)}"><button type="button" data-xk="${esc(id)}" aria-label="เอารูปนี้ออก"><i data-lucide="x"></i></button></div>`).join('')
+    +extraNew.map((u,i)=>`<div class="xi"><img alt="" src="${u}"><button type="button" data-xn="${i}" aria-label="เอารูปนี้ออก"><i data-lucide="x"></i></button></div>`).join('')
+    +(n<4?`<button type="button" class="xadd" id="xAdd"><i data-lucide="plus"></i>เพิ่มรูป</button>`:'');
+  icons();fillImages($('#fExtra'));
+}
+$('#fExtra').addEventListener('click',e=>{
+  const k=e.target.closest('[data-xk]'),n=e.target.closest('[data-xn]');
+  if(k){extraKeep=extraKeep.filter(i=>i!==k.dataset.xk);drawExtra()}
+  else if(n){extraNew.splice(Number(n.dataset.xn),1);drawExtra()}
+  else if(e.target.closest('#xAdd'))$('#fileX').click();
+});
+$('#fileX').addEventListener('change',async e=>{
+  for(const f of [...e.target.files]){if(extraKeep.length+extraNew.length>=4)break;if(!f.type.startsWith('image/'))continue;try{extraNew.push(await resize(f,1200))}catch(err){toast(err.message)}}
+  e.target.value='';drawExtra();
+});
 function showView(v){$('#catalog').hidden=v!=='catalog';$('#formView').hidden=v!=='form';window.scrollTo(0,0)}
 function openForm(x){
-  editing=x?x.id:null;newImage=null;rating=x?x.interest:0;
+  editing=x?x.id:null;newImage=null;rating=x?x.interest:0;extraKeep=x?[...x.images]:[];extraNew=[];
   ['name','country','brand','why','idea','source'].forEach(k=>$('#f-'+k).value=x?x[k]:'');
   $('#f-category').value=x&&CATS.includes(x.category)?x.category:CATS[0];
   $('#f-packaging').value=x&&PACKS.includes(x.packaging)?x.packaging:PACKS[0];
+  $('#f-status').value=x&&STATUSES.includes(x.status)?x.status:STATUSES[0];
   $('#fTitle').textContent=x?'แก้ไขสินค้า':'เพิ่มสินค้าที่เจอ';
   $('#fImg').innerHTML=x&&x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:'<i data-lucide="image-plus"></i>';
-  drawRate();showView('form');icons();fillImages($('#fImg'));$('#f-name').focus();
+  drawRate();drawExtra();showView('form');icons();fillImages($('#fImg'));$('#f-name').focus();
 }
 $('#navAdd').addEventListener('click',()=>openForm());
 $('#fCancel').addEventListener('click',()=>showView('catalog'));
-function resize(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.85))};img.onerror=()=>rej(new Error('อ่านไฟล์รูปไม่ได้'));img.src=URL.createObjectURL(file)})}
+function resize(file,max=1600){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.85))};img.onerror=()=>rej(new Error('อ่านไฟล์รูปไม่ได้'));img.src=URL.createObjectURL(file)})}
 async function takeFile(f){if(!f||!f.type.startsWith('image/'))return toast('กรุณาเลือกไฟล์รูป');try{newImage=await resize(f);$('#fImg').innerHTML=`<img alt="" src="${newImage}">`}catch(e){toast(e.message)}}
 $('#drop').addEventListener('click',()=>$('#file').click());
 $('#drop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click()}});
@@ -399,39 +600,90 @@ $('#drop').addEventListener('dragover',e=>e.preventDefault());
 $('#drop').addEventListener('drop',e=>{e.preventDefault();takeFile(e.dataTransfer.files[0])});
 $('#pform').addEventListener('submit',async e=>{
   e.preventDefault();const b=$('#fSave');b.disabled=true;b.textContent='กำลังบันทึก…';
-  const d={id:editing,interest:rating};['name','country','brand','category','packaging','why','idea','source'].forEach(k=>d[k]=$('#f-'+k).value.trim());
+  const d={id:editing,interest:rating,keepExtra:extraKeep,newExtra:extraNew.map(u=>({b64:u.split(',')[1]}))};
+  ['name','country','brand','category','packaging','status','why','idea','source'].forEach(k=>d[k]=$('#f-'+k).value.trim());
   if(newImage)d.image={b64:newImage.split(',')[1]};
   try{await call('saveProduct',token,d);toast(editing?'บันทึกการแก้ไขแล้ว':'เพิ่มสินค้าแล้ว');showView('catalog');await load()}
   catch(err){toast(err.message||'บันทึกไม่สำเร็จ')}
   finally{b.disabled=false;b.innerHTML='<i data-lucide="save"></i>บันทึก';icons()}
 });
 
-/* ---------- โหมดนำเสนอ ---------- */
-function slide(){
-  const x=pList[pIdx];if(!x)return;
-  $('#pSlide').innerHTML=`<div class="ph">${x.imageId?`<img alt="${esc(x.name)}" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
-  <div class="ptext"><div class="meta" style="font-size:15px"><span class="tag">${esc(x.category)}</span><span>${esc(x.country)}${x.packaging?' · '+esc(x.packaging):''}</span></div>
-  <h2>${esc(x.name)}</h2>${x.interest?dots(x.interest):''}
-  ${x.why?`<div><h4>ทำไมน่าสนใจ</h4><p>${esc(x.why)}</p></div>`:''}
-  ${x.idea?`<div><h4>ไอเดียสำหรับบริษัท</h4><p>${esc(x.idea)}</p></div>`:''}</div>`;
-  $('#pCount').textContent=`${pIdx+1} / ${pList.length}`;
-  $('#pPrev').disabled=pIdx===0;$('#pNext').disabled=pIdx>=pList.length-1;
-  icons();fillImages($('#pSlide'));
-  pList.slice(pIdx+1,pIdx+3).forEach(y=>y.imageId&&getImg(y.imageId));
+/* ---------- โหมดนำเสนอ: สไลด์เปิด → สินค้า → สไลด์สรุป ---------- */
+function catBars(list){
+  const m=new Map();list.forEach(x=>m.set(x.category||'ไม่ระบุหมวด',(m.get(x.category||'ไม่ระบุหมวด')||0)+1));
+  const max=Math.max(1,...m.values());
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<div class="bar"><span>${esc(c)}</span><i style="width:${n/max*100}%"></i><em>${n}</em></div>`).join('');
 }
-$('#navPresent').addEventListener('click',()=>{
-  pList=picked.length?picked.map(id=>items.find(x=>x.id===id)).filter(Boolean):visible();
-  if(!pList.length)return toast('ไม่มีสินค้าให้นำเสนอ');
+const ranked=list=>[...list].sort((a,b)=>b.interest-a.interest||likesOf(b.id)-likesOf(a.id));
+function slideHTML(s){
+  if(s.t==='intro'){
+    const L=s.list,countries=new Set(L.map(x=>x.country.trim()).filter(Boolean));
+    return `<div class="intro"><div><h2>เทรนด์สินค้าน่าจับตา</h2><p class="sub">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}</p>
+      <div class="kpis"><div><b>${L.length}</b><span>สินค้า</span></div><div><b>${countries.size}</b><span>ประเทศ</span></div><div><b>${new Set(L.map(x=>x.category)).size}</b><span>หมวด</span></div></div>
+      <div class="bars">${catBars(L)}</div></div>
+      <div><div class="fig" id="pMap" role="img" aria-label="แผนที่ประเทศต้นทาง"></div><div class="mlist" id="pMapList"></div></div></div>`;
+  }
+  if(s.t==='outro'){
+    const top=ranked(s.list).slice(0,5);
+    return `<div class="outro"><h2>สรุป: รายการที่น่าสนใจที่สุด</h2><ol class="rank">${top.map((x,i)=>`<li><span class="n">${i+1}</span><div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:''}</div><div><h3>${esc(x.name)}</h3><p>${esc(x.country)} · ${esc(x.category)}</p>${x.idea?`<p>${esc(x.idea)}</p>`:''}</div><div class="r">${x.interest?dots(x.interest):''}${stBadge(x.status)}${likesOf(x.id)?`<span class="st" style="--sc:var(--sand)">${likesOf(x.id)} คนสนใจ</span>`:''}</div></li>`).join('')}</ol></div>`;
+  }
+  const x=s.x,all=[x.imageId,...x.images].filter(Boolean),lk=likesOf(x.id);
+  return `<div class="pslide"><div class="pimg"><div class="ph">${all[0]?`<img alt="${esc(x.name)}" id="pMain" data-img="${esc(all[0])}">`:'<i data-lucide="image"></i>'}</div>
+    ${all.length>1?`<div class="thumbs">${all.map((im,i)=>`<button data-psw="${esc(im)}" class="${i?'':'on'}" aria-label="รูปที่ ${i+1}"><img alt="" data-img="${esc(im)}"></button>`).join('')}</div>`:''}</div>
+    <div class="ptext"><div class="meta" style="font-size:15px"><span class="tag">${esc(x.category)}</span><span>${esc(x.country)}${x.packaging?' · '+esc(x.packaging):''}</span></div>
+    <h2>${esc(x.name)}</h2><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${x.interest?dots(x.interest):''}${stBadge(x.status)}${lk?`<span class="st" style="--sc:var(--sand)">${lk} คนสนใจ</span>`:''}</div>
+    ${x.why?`<div><h4>ทำไมน่าสนใจ</h4><p>${esc(x.why)}</p></div>`:''}
+    ${x.idea?`<div><h4>ไอเดียสำหรับบริษัท</h4><p>${esc(x.idea)}</p></div>`:''}</div></div>`;
+}
+function slide(){
+  const s=slides[pIdx];if(!s)return;
+  $('#pSlide').innerHTML=slideHTML(s);
+  $('#pCount').textContent=s.t==='intro'?'ภาพรวม':s.t==='outro'?'สรุป':`${pIdx} / ${slides.length-2}`;
+  $('#pPrev').disabled=pIdx===0;$('#pNext').disabled=pIdx>=slides.length-1;
+  icons();fillImages($('#pSlide'));
+  if(s.t==='intro')drawMap($('#pMap'),$('#pMapList'),s.list);
+  slides.slice(pIdx+1,pIdx+3).forEach(n=>n.x&&n.x.imageId&&getImg(n.x.imageId));
+}
+function startPresent(){
+  const list=chosen();if(!list.length)return toast('ไม่มีสินค้าให้นำเสนอ');
+  slides=[{t:'intro',list},...list.map(x=>({t:'item',x})),{t:'outro',list}];
   pIdx=0;$('#present').hidden=false;slide();
   try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}
-});
+}
+$('#navPresent').addEventListener('click',startPresent);
+$('#pSlide').addEventListener('click',async e=>{const b=e.target.closest('[data-psw]');if(!b)return;$('#pMain').src=await getImg(b.dataset.psw);document.querySelectorAll('#pSlide [data-psw]').forEach(t=>t.classList.toggle('on',t===b))});
 function closePresent(){$('#present').hidden=true;try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
 $('#pPrev').addEventListener('click',()=>{if(pIdx>0){pIdx--;slide()}});
-$('#pNext').addEventListener('click',()=>{if(pIdx<pList.length-1){pIdx++;slide()}});
+$('#pNext').addEventListener('click',()=>{if(pIdx<slides.length-1){pIdx++;slide()}});
 $('#pClose').addEventListener('click',closePresent);
 document.addEventListener('keydown',e=>{
-  if(!$('#present').hidden){if(e.key==='ArrowRight')$('#pNext').click();if(e.key==='ArrowLeft')$('#pPrev').click();if(e.key==='Escape')closePresent();return}
+  if(!$('#present').hidden){if(e.key==='ArrowRight'||e.key===' ')$('#pNext').click();if(e.key==='ArrowLeft')$('#pPrev').click();if(e.key==='Escape')closePresent();return}
   if(e.key==='Escape')$('#detail').hidden=true;
+});
+
+/* ---------- PDF / พิมพ์ ---------- */
+$('#navPrint').addEventListener('click',async()=>{
+  const list=chosen();if(!list.length)return toast('ไม่มีสินค้าให้พิมพ์');
+  const b=$('#navPrint');b.disabled=true;toast('กำลังเตรียมเอกสาร…');
+  try{
+    const ids=[...new Set(list.flatMap(x=>[x.imageId,...x.images]).filter(Boolean))];
+    const urls={};await Promise.all(ids.map(async id=>{urls[id]=await getImg(id)}));
+    const countries=new Set(list.map(x=>x.country.trim()).filter(Boolean));
+    const m=new Map();list.forEach(x=>m.set(x.category||'ไม่ระบุหมวด',(m.get(x.category||'ไม่ระบุหมวด')||0)+1));const mx=Math.max(1,...m.values());
+    const cover=`<section class="pp"><div class="cv"><h1>เทรนด์สินค้าน่าจับตา</h1><p class="muted">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})} · ${list.length} สินค้า จาก ${countries.size} ประเทศ</p>
+      <div>${[...m.entries()].map(([c,n])=>`<div class="cvbar"><span>${esc(c)}</span><i style="width:${n/mx*100}%"></i><span>${n}</span></div>`).join('')}</div>
+      <ol>${list.map(x=>`<li>${esc(x.name)} <span class="muted">(${esc(x.country)})</span></li>`).join('')}</ol></div></section>`;
+    const pages=list.map((x,i)=>{const ex=x.images.map(id=>urls[id]).filter(Boolean),notes=notesOf(x.id),lk=likesOf(x.id);return `<section class="pp">
+      ${urls[x.imageId]?`<img class="pmain" alt="" src="${urls[x.imageId]}">`:''}${ex.length?`<div class="pex">${ex.map(u=>`<img alt="" src="${u}">`).join('')}</div>`:''}
+      <h2>${i+1}. ${esc(x.name)}</h2>
+      <table><tr><td>ประเทศ</td><td>${esc(x.country)||'-'}</td></tr><tr><td>แบรนด์</td><td>${esc(x.brand)||'-'}</td></tr><tr><td>หมวด / บรรจุภัณฑ์</td><td>${esc(x.category)} / ${esc(x.packaging)}</td></tr><tr><td>ความน่าสนใจ</td><td>${x.interest?x.interest+' / 5':'-'}${lk?` · ${lk} คนสนใจ`:''}</td></tr><tr><td>สถานะ</td><td>${esc(x.status)}</td></tr>${x.source?`<tr><td>แหล่งที่มา</td><td style="word-break:break-all">${esc(x.source)}</td></tr>`:''}</table>
+      ${x.why?`<div class="lbl">ทำไมน่าสนใจ</div><div>${esc(x.why)}</div>`:''}
+      ${x.idea?`<div class="lbl">ไอเดียสำหรับบริษัท</div><div>${esc(x.idea)}</div>`:''}
+      ${notes.length?`<div class="lbl">ความเห็นจากทีม</div>${notes.map(c=>`<div>• <b>${esc(c.name)}</b>: ${esc(c.text)}</div>`).join('')}`:''}</section>`}).join('');
+    $('#printArea').innerHTML=cover+pages;
+    await Promise.all([...document.querySelectorAll('#printArea img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+    $('#toast').hidden=true;window.print();
+  }catch(e){toast('เตรียมเอกสารไม่สำเร็จ')}finally{b.disabled=false}
 });
 
 /* ---------- เริ่มต้น ---------- */

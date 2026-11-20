@@ -1,24 +1,30 @@
 /**
  * เทรนด์สินค้าน่าจับตา — ฝั่ง Google Apps Script (API)
  * หน้าเว็บอยู่บน GitHub Pages และเรียกสคริปต์นี้ผ่าน Web app URL
- * - ข้อมูลเก็บในชีต "สินค้า" ของ Google Sheet นี้
+ * - ข้อมูลสินค้าเก็บในชีต "สินค้า" ความเห็นและโหวตเก็บในชีต "ความเห็น"
  * - รูปเก็บในโฟลเดอร์ Google Drive "รูปสินค้าเทรนด์"
  * - รหัสผ่านตั้งที่ Project Settings > Script properties
  *     ADMIN_PASSWORD  = รหัสผู้ดูแล (เพิ่ม/แก้/ลบได้)
- *     VIEWER_PASSWORD = รหัสผู้ชม (ดูอย่างเดียว)
+ *     VIEWER_PASSWORD = รหัสผู้ชม (ดู โหวต และคอมเมนต์ได้)
+ * แก้โค้ดนี้แล้ว: รัน setup อีกครั้ง และ Deploy > Manage deployments > แก้ไข > New version
  */
 
 const SHEET_NAME = 'สินค้า';
+const COMMENT_SHEET = 'ความเห็น';
 const FOLDER_NAME = 'รูปสินค้าเทรนด์';
 const SESSION_SECONDS = 6 * 60 * 60; // ล็อกอินอยู่ได้ 6 ชั่วโมง
+const MAX_EXTRA = 4;                  // รูปเพิ่มเติมสูงสุดต่อสินค้า
 const KEYS = ['id', 'createdAt', 'name', 'country', 'brand', 'category', 'packaging',
-  'interest', 'why', 'idea', 'source', 'imageId', 'imageUrl'];
+  'interest', 'why', 'idea', 'source', 'imageId', 'imageUrl', 'status', 'images'];
 const HEADERS = ['รหัส', 'วันที่บันทึก', 'ชื่อสินค้า', 'ประเทศ', 'แบรนด์', 'หมวด', 'บรรจุภัณฑ์',
-  'ความน่าสนใจ (1-5)', 'ทำไมน่าสนใจ', 'ไอเดียสำหรับบริษัท', 'ลิงก์แหล่งที่มา', 'รหัสรูป', 'ลิงก์รูป'];
+  'ความน่าสนใจ (1-5)', 'ทำไมน่าสนใจ', 'ไอเดียสำหรับบริษัท', 'ลิงก์แหล่งที่มา', 'รหัสรูป', 'ลิงก์รูป',
+  'สถานะ', 'รูปเพิ่มเติม (รหัส)'];
+const C_HEADERS = ['รหัสความเห็น', 'วันที่', 'รหัสสินค้า', 'ประเภท', 'ชื่อ', 'ข้อความ', 'บทบาท'];
 
 /* ---------- API สำหรับหน้าเว็บบน GitHub Pages ---------- */
 
-const API = { login, logout, listProducts, getImage, saveProduct, deleteProduct };
+const API = { login, logout, listProducts, getImage, saveProduct, deleteProduct, setStatus,
+  listComments, addComment, deleteComment };
 
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
@@ -39,16 +45,16 @@ function doPost(e) {
   }
 }
 
-/** รันครั้งเดียวตอนติดตั้ง: สร้างชีตและโฟลเดอร์รูป */
+/** รันตอนติดตั้ง และรันซ้ำได้หลังอัปเดตโค้ด (เพิ่มคอลัมน์ใหม่ให้อัตโนมัติ) */
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) sh = ss.insertSheet(SHEET_NAME);
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(HEADERS);
-    sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
-  }
+  if (sh.getLastRow() === 0) sh.appendRow(HEADERS);
+  else sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+  commentsSheet_();
   const props = PropertiesService.getScriptProperties();
   if (!props.getProperty('FOLDER_ID')) {
     props.setProperty('FOLDER_ID', DriveApp.createFolder(FOLDER_NAME).getId());
@@ -91,16 +97,55 @@ function roleOf_(token) {
 }
 
 function requireAdmin_(token) {
-  if (roleOf_(token) !== 'admin') throw new Error('บัญชีนี้ดูได้อย่างเดียว');
+  if (roleOf_(token) !== 'admin') throw new Error('บัญชีนี้ไม่มีสิทธิ์แก้ไข');
 }
 
-/* ---------- ข้อมูล ---------- */
+/* ---------- ตัวช่วย ---------- */
 
 function sheet_() {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   if (!sh) throw new Error('ยังไม่ได้รัน setup');
   return sh;
 }
+
+function commentsSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(COMMENT_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(COMMENT_SHEET);
+    sh.appendRow(C_HEADERS);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, C_HEADERS.length).setFontWeight('bold');
+  }
+  return sh;
+}
+
+function folder_() {
+  return DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('FOLDER_ID'));
+}
+
+function clean_(v, max) {
+  v = String(v == null ? '' : v).trim().slice(0, max || 5000);
+  return /^[=+\-@]/.test(v) ? "'" + v : v; // กันข้อความถูกตีความเป็นสูตร
+}
+
+function rowIndexOf_(sh, id) {
+  const n = sh.getLastRow() - 1;
+  if (n < 1 || !id) return -1;
+  return sh.getRange(2, 1, n, 1).getValues().flat().map(String).indexOf(String(id));
+}
+
+function trash_(id) {
+  if (!id) return;
+  try { DriveApp.getFileById(id).setTrashed(true); } catch (e) { /* ไฟล์ถูกลบไปแล้ว */ }
+}
+
+function upload_(folder, b64, baseName) {
+  const name = String(baseName || 'product').replace(/[\\/:*?"<>|]/g, ' ').slice(0, 60) + '.jpg';
+  return folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), 'image/jpeg', name));
+}
+
+/* ---------- สินค้า ---------- */
 
 function listProducts(token) {
   roleOf_(token);
@@ -125,6 +170,8 @@ function listProducts(token) {
       if (m) o.imageId = m[0];
     }
     o.interest = Number(o.interest) || 0;
+    o.status = o.status || 'กำลังศึกษา';
+    o.images = o.images.split(',').map(s => s.trim()).filter(Boolean);
     out.push(o);
   });
   return out.reverse(); // ใหม่สุดก่อน
@@ -135,7 +182,7 @@ function getImage(token, imageId) {
   roleOf_(token);
   const sh = sheet_();
   const n = sh.getLastRow() - 1;
-  const known = n > 0 ? sh.getRange(2, 12, n, 2).getDisplayValues().flat().join(' ') : '';
+  const known = n > 0 ? sh.getRange(2, 12, n, 4).getDisplayValues().flat().join(' ') : '';
   if (!imageId || known.indexOf(imageId) === -1) throw new Error('ไม่พบรูปนี้');
   const blob = DriveApp.getFileById(imageId).getBlob();
   return 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
@@ -144,32 +191,37 @@ function getImage(token, imageId) {
 function saveProduct(token, d) {
   requireAdmin_(token);
   const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(25000);
   try {
     const sh = sheet_();
-    const clean = v => {
-      v = String(v == null ? '' : v).trim().slice(0, 5000);
-      return /^[=+\-@]/.test(v) ? "'" + v : v; // กันข้อความถูกตีความเป็นสูตร
-    };
-    let rowIdx = -1;
-    if (d.id) {
-      const ids = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 1).getValues().flat().map(String);
-      rowIdx = ids.indexOf(String(d.id));
-    }
-    let imageId = rowIdx >= 0 ? String(sh.getRange(rowIdx + 2, 12).getValue()) : '';
-    let imageUrl = rowIdx >= 0 ? String(sh.getRange(rowIdx + 2, 13).getValue()) : '';
+    const rowIdx = rowIndexOf_(sh, d.id);
+    const old = rowIdx >= 0 ? sh.getRange(rowIdx + 2, 1, 1, KEYS.length).getValues()[0] : null;
+    let imageId = old ? String(old[11]) : '';
+    let imageUrl = old ? String(old[12]) : '';
+    let extras = old ? String(old[14]).split(',').map(s => s.trim()).filter(Boolean) : [];
+    let folder = null;
+    const getFolder = () => folder || (folder = folder_());
+
     if (d.image && d.image.b64) {
-      const folder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('FOLDER_ID'));
-      const name = String(d.name || 'product').replace(/[\\/:*?"<>|]/g, ' ').slice(0, 60) + '.jpg';
-      const file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(d.image.b64), 'image/jpeg', name));
-      imageId = file.getId();
-      imageUrl = file.getUrl();
+      const f = upload_(getFolder(), d.image.b64, d.name);
+      imageId = f.getId();
+      imageUrl = f.getUrl();
     }
+    if (Array.isArray(d.keepExtra)) {
+      extras.filter(id => d.keepExtra.indexOf(id) === -1).forEach(trash_);
+      extras = extras.filter(id => d.keepExtra.indexOf(id) > -1);
+    }
+    (Array.isArray(d.newExtra) ? d.newExtra : []).forEach((im, k) => {
+      if (im && im.b64 && extras.length < MAX_EXTRA) {
+        extras.push(upload_(getFolder(), im.b64, (d.name || 'product') + '-' + (extras.length + 2)).getId());
+      }
+    });
+
     const id = rowIdx >= 0 ? String(d.id) : Utilities.getUuid().slice(0, 8);
-    const createdAt = rowIdx >= 0 ? sh.getRange(rowIdx + 2, 2).getValue() : new Date();
-    const row = [id, createdAt, clean(d.name), clean(d.country), clean(d.brand), clean(d.category),
-      clean(d.packaging), Math.max(0, Math.min(5, Number(d.interest) || 0)), clean(d.why), clean(d.idea),
-      clean(d.source), imageId, imageUrl];
+    const createdAt = old ? old[1] : new Date();
+    const row = [id, createdAt, clean_(d.name), clean_(d.country), clean_(d.brand), clean_(d.category),
+      clean_(d.packaging), Math.max(0, Math.min(5, Number(d.interest) || 0)), clean_(d.why), clean_(d.idea),
+      clean_(d.source), imageId, imageUrl, clean_(d.status || 'กำลังศึกษา', 60), extras.join(',')];
     if (rowIdx >= 0) sh.getRange(rowIdx + 2, 1, 1, row.length).setValues([row]);
     else sh.appendRow(row);
     return id;
@@ -178,24 +230,77 @@ function saveProduct(token, d) {
   }
 }
 
+function setStatus(token, id, status) {
+  requireAdmin_(token);
+  const sh = sheet_();
+  const i = rowIndexOf_(sh, id);
+  if (i < 0) throw new Error('ไม่พบสินค้านี้');
+  sh.getRange(i + 2, 14).setValue(clean_(status, 60));
+  return true;
+}
+
 function deleteProduct(token, id) {
   requireAdmin_(token);
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
     const sh = sheet_();
-    const n = sh.getLastRow() - 1;
-    if (n < 1) return false;
-    const ids = sh.getRange(2, 1, n, 1).getValues().flat().map(String);
-    const i = ids.indexOf(String(id));
+    const i = rowIndexOf_(sh, id);
     if (i < 0) return false;
-    const imageId = String(sh.getRange(i + 2, 12).getValue());
-    if (imageId) {
-      try { DriveApp.getFileById(imageId).setTrashed(true); } catch (e) { /* รูปถูกลบไปแล้ว */ }
-    }
+    const r = sh.getRange(i + 2, 1, 1, KEYS.length).getValues()[0];
+    trash_(String(r[11]));
+    String(r[14]).split(',').map(s => s.trim()).filter(Boolean).forEach(trash_);
     sh.deleteRow(i + 2);
     return true;
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------- ความเห็นและโหวต ---------- */
+
+function listComments(token) {
+  roleOf_(token);
+  const sh = commentsSheet_();
+  const n = sh.getLastRow() - 1;
+  if (n < 1) return [];
+  return sh.getRange(2, 1, n, C_HEADERS.length).getValues()
+    .filter(r => r[0] && r[2])
+    .map(r => ({
+      id: String(r[0]),
+      date: r[1] instanceof Date ? r[1].toISOString() : String(r[1]),
+      productId: String(r[2]),
+      kind: String(r[3]) === 'like' ? 'like' : 'comment',
+      name: String(r[4]),
+      text: String(r[5]),
+      role: String(r[6])
+    }));
+}
+
+function addComment(token, productId, kind, name, text) {
+  const role = roleOf_(token);
+  kind = kind === 'like' ? 'like' : 'comment';
+  name = clean_(name || 'ไม่ระบุชื่อ', 60);
+  text = kind === 'like' ? '' : clean_(text, 1000);
+  if (kind === 'comment' && !text) throw new Error('กรุณาพิมพ์ความเห็น');
+  if (rowIndexOf_(sheet_(), productId) < 0) throw new Error('ไม่พบสินค้านี้');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const c = { id: Utilities.getUuid().slice(0, 10), date: new Date().toISOString(),
+      productId: String(productId), kind: kind, name: name, text: text, role: role };
+    commentsSheet_().appendRow([c.id, new Date(), c.productId, c.kind, c.name, c.text, c.role]);
+    return c;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteComment(token, id) {
+  requireAdmin_(token);
+  const sh = commentsSheet_();
+  const i = rowIndexOf_(sh, id);
+  if (i < 0) return false;
+  sh.deleteRow(i + 2);
+  return true;
 }
