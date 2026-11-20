@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>เทรนด์สินค้าน่าจับตา</title>
+<title>เทรนด์สินค้าน่าจับตา · TCC</title>
+<link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -34,6 +35,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--soft)}
 .lcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(24px,5vw,40px);width:min(420px,100%);display:flex;flex-direction:column;gap:16px}
+.logo{display:block;width:auto;flex:none;object-fit:contain}
 .mark{width:56px;height:56px;border-radius:16px;background:var(--green);color:var(--onGreen);display:grid;place-items:center}
 .mark svg{width:28px;height:28px}
 .lcard h1{font-size:30px}.lcard p{margin:0;color:var(--mute)}
@@ -185,6 +187,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
   .pp .pmain{width:100%;height:95mm;object-fit:cover;border-radius:4mm}
   .pp .pex{display:flex;gap:3mm}.pp .pex img{width:30mm;height:22mm;object-fit:cover;border-radius:2mm}
   .pp table{border-collapse:collapse;width:100%}.pp td{padding:1.5mm 2mm;border-bottom:.3mm solid #ddd;vertical-align:top}.pp td:first-child{color:#555;width:38mm}
+  .pp .phd{display:flex;justify-content:space-between;align-items:center;color:#555;font-size:9pt;border-bottom:.3mm solid #ddd;padding-bottom:2mm}.pp .phd img{height:8mm;width:auto}
   .pp .lbl{color:#1d6b45;font-weight:600;margin-top:2mm}
   .pp .muted{color:#555}
   .pp .cv{display:flex;flex-direction:column;justify-content:center;min-height:240mm;gap:8mm}
@@ -197,7 +200,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
 <!-- หน้าเข้าสู่ระบบ -->
 <section id="login">
   <form class="lcard" id="loginForm">
-    <div class="mark"><i data-lucide="sprout"></i></div>
+    <img class="logo" src="logo.png" alt="TCC เทพผดุงพรมะพร้าว" style="height:64px">
     <div><h1>เทรนด์สินค้าน่าจับตา</h1><p>สินค้าใหม่จากทั่วโลกที่ต่อยอดได้กับวัตถุดิบและไลน์การผลิตของเรา</p></div>
     <label class="f">รหัสผ่าน<input id="pw" type="password" autocomplete="current-password" required></label>
     <div class="err" id="loginErr" role="alert"></div>
@@ -209,7 +212,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
 <!-- แอป -->
 <div id="app" hidden>
   <header class="top"><div class="wrap">
-    <div class="brand"><span class="mark"><i data-lucide="sprout"></i></span><span>เทรนด์สินค้า</span></div>
+    <div class="brand"><img class="logo" src="logo.png" alt="TCC" style="height:34px"><span>เทรนด์สินค้า</span></div>
     <span class="role" id="roleLbl"></span>
     <button id="navAdd" class="pri" hidden><i data-lucide="plus"></i><span class="navtxt">เพิ่มสินค้า</span></button>
     <button id="navPrint"><i data-lucide="printer"></i><span class="navtxt">PDF</span></button>
@@ -618,14 +621,14 @@ const ranked=list=>[...list].sort((a,b)=>b.interest-a.interest||likesOf(b.id)-li
 function slideHTML(s){
   if(s.t==='intro'){
     const L=s.list,countries=new Set(L.map(x=>x.country.trim()).filter(Boolean));
-    return `<div class="intro"><div><h2>เทรนด์สินค้าน่าจับตา</h2><p class="sub">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}</p>
+    return `<div class="intro"><div><img class="logo" src="logo.png" alt="TCC" style="height:clamp(48px,7vh,72px);margin-bottom:18px"><h2>เทรนด์สินค้าน่าจับตา</h2><p class="sub">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}</p>
       <div class="kpis"><div><b>${L.length}</b><span>สินค้า</span></div><div><b>${countries.size}</b><span>ประเทศ</span></div><div><b>${new Set(L.map(x=>x.category)).size}</b><span>หมวด</span></div></div>
       <div class="bars">${catBars(L)}</div></div>
       <div><div class="fig" id="pMap" role="img" aria-label="แผนที่ประเทศต้นทาง"></div><div class="mlist" id="pMapList"></div></div></div>`;
   }
   if(s.t==='outro'){
     const top=ranked(s.list).slice(0,5);
-    return `<div class="outro"><h2>สรุป: รายการที่น่าสนใจที่สุด</h2><ol class="rank">${top.map((x,i)=>`<li><span class="n">${i+1}</span><div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:''}</div><div><h3>${esc(x.name)}</h3><p>${esc(x.country)} · ${esc(x.category)}</p>${x.idea?`<p>${esc(x.idea)}</p>`:''}</div><div class="r">${x.interest?dots(x.interest):''}${stBadge(x.status)}${likesOf(x.id)?`<span class="st" style="--sc:var(--sand)">${likesOf(x.id)} คนสนใจ</span>`:''}</div></li>`).join('')}</ol></div>`;
+    return `<div class="outro"><div style="display:flex;justify-content:space-between;align-items:center;gap:16px"><h2>สรุป: รายการที่น่าสนใจที่สุด</h2><img class="logo" src="logo.png" alt="TCC" style="height:clamp(40px,6vh,60px)"></div><ol class="rank">${top.map((x,i)=>`<li><span class="n">${i+1}</span><div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:''}</div><div><h3>${esc(x.name)}</h3><p>${esc(x.country)} · ${esc(x.category)}</p>${x.idea?`<p>${esc(x.idea)}</p>`:''}</div><div class="r">${x.interest?dots(x.interest):''}${stBadge(x.status)}${likesOf(x.id)?`<span class="st" style="--sc:var(--sand)">${likesOf(x.id)} คนสนใจ</span>`:''}</div></li>`).join('')}</ol></div>`;
   }
   const x=s.x,all=[x.imageId,...x.images].filter(Boolean),lk=likesOf(x.id);
   return `<div class="pslide"><div class="pimg"><div class="ph">${all[0]?`<img alt="${esc(x.name)}" id="pMain" data-img="${esc(all[0])}">`:'<i data-lucide="image"></i>'}</div>
@@ -670,10 +673,10 @@ $('#navPrint').addEventListener('click',async()=>{
     const urls={};await Promise.all(ids.map(async id=>{urls[id]=await getImg(id)}));
     const countries=new Set(list.map(x=>x.country.trim()).filter(Boolean));
     const m=new Map();list.forEach(x=>m.set(x.category||'ไม่ระบุหมวด',(m.get(x.category||'ไม่ระบุหมวด')||0)+1));const mx=Math.max(1,...m.values());
-    const cover=`<section class="pp"><div class="cv"><h1>เทรนด์สินค้าน่าจับตา</h1><p class="muted">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})} · ${list.length} สินค้า จาก ${countries.size} ประเทศ</p>
+    const cover=`<section class="pp"><div class="cv"><img src="logo.png" alt="TCC" style="height:22mm;width:auto;align-self:flex-start"><h1>เทรนด์สินค้าน่าจับตา</h1><p class="muted">${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})} · ${list.length} สินค้า จาก ${countries.size} ประเทศ</p>
       <div>${[...m.entries()].map(([c,n])=>`<div class="cvbar"><span>${esc(c)}</span><i style="width:${n/mx*100}%"></i><span>${n}</span></div>`).join('')}</div>
       <ol>${list.map(x=>`<li>${esc(x.name)} <span class="muted">(${esc(x.country)})</span></li>`).join('')}</ol></div></section>`;
-    const pages=list.map((x,i)=>{const ex=x.images.map(id=>urls[id]).filter(Boolean),notes=notesOf(x.id),lk=likesOf(x.id);return `<section class="pp">
+    const pages=list.map((x,i)=>{const ex=x.images.map(id=>urls[id]).filter(Boolean),notes=notesOf(x.id),lk=likesOf(x.id);return `<section class="pp"><div class="phd"><span>เทรนด์สินค้าน่าจับตา</span><img src="logo.png" alt="TCC"></div>
       ${urls[x.imageId]?`<img class="pmain" alt="" src="${urls[x.imageId]}">`:''}${ex.length?`<div class="pex">${ex.map(u=>`<img alt="" src="${u}">`).join('')}</div>`:''}
       <h2>${i+1}. ${esc(x.name)}</h2>
       <table><tr><td>ประเทศ</td><td>${esc(x.country)||'-'}</td></tr><tr><td>แบรนด์</td><td>${esc(x.brand)||'-'}</td></tr><tr><td>หมวด / บรรจุภัณฑ์</td><td>${esc(x.category)} / ${esc(x.packaging)}</td></tr><tr><td>ความน่าสนใจ</td><td>${x.interest?x.interest+' / 5':'-'}${lk?` · ${lk} คนสนใจ`:''}</td></tr><tr><td>สถานะ</td><td>${esc(x.status)}</td></tr>${x.source?`<tr><td>แหล่งที่มา</td><td style="word-break:break-all">${esc(x.source)}</td></tr>`:''}</table>
