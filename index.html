@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เทรนด์สินค้าน่าจับตา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+/* VOICE: a calm product catalogue for executives — clear, confident, few words
+   IDEA: a trade-fair lookbook: each find is a large photo card with its origin and fit for the company
+   PICTURE: the photo grid itself; present mode turns each card into a full-screen slide
+   COLOUR and TYPE: coconut-flesh white, husk-dark ink, palm green accent, sand for ratings; Anuphan + IBM Plex Sans Thai
+   LAYOUT: login card -> header with filters -> photo grid; form in one calm column */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121513);--soft:light-dark(#f3f5f1,#1a1f1c);--card:light-dark(#ffffff,#1a1f1c);--ink:light-dark(#1b211d,#e8eee9);--mute:light-dark(#5d6961,#9aa79f);--line:light-dark(#dfe5df,#2a322d);--green:light-dark(#1d6b45,#56b886);--onGreen:light-dark(#ffffff,#0e1a13);--sand:#d39a2f}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Anuphan,"IBM Plex Sans Thai",sans-serif;line-height:1.2;margin:0;text-wrap:balance}
+[hidden]{display:none!important}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+button,.btn{font:inherit;font-size:15px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+button.pri{background:var(--green);border-color:var(--green);color:var(--onGreen);font-weight:600}
+button.ghost{background:transparent;border-color:transparent}
+button.danger{color:#c2410c}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+svg.lucide{width:18px;height:18px;flex:none}
+input,select,textarea{font:inherit;font-size:16px;min-height:46px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
+textarea{min-height:96px;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:500}
+label.f small{font-weight:400;color:var(--mute)}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--soft)}
+.lcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(24px,5vw,40px);width:min(420px,100%);display:flex;flex-direction:column;gap:16px}
+.mark{width:56px;height:56px;border-radius:16px;background:var(--green);color:var(--onGreen);display:grid;place-items:center}
+.mark svg{width:28px;height:28px}
+.lcard h1{font-size:30px}
+.lcard p{margin:0;color:var(--mute)}
+.err{color:#c2410c;font-size:15px;min-height:1.5em}
+.hint{font-size:14px;background:var(--soft);border-radius:10px;padding:10px 12px;color:var(--mute)}
+/* header */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;padding:10px max(4vw,16px);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:Anuphan,sans-serif;font-weight:700;font-size:18px;margin-right:auto}
+.brand .mark{width:36px;height:36px;border-radius:10px}.brand .mark svg{width:20px;height:20px}
+.role{font-size:13px;color:var(--mute)}
+.hero h1{font-size:clamp(30px,4.5vw,48px)}
+.hero p{color:var(--mute);margin:8px 0 0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:18px 0 4px}
+.chip{flex:none;border-radius:99px;min-height:40px}
+.chip em{font-style:normal;color:var(--mute);margin-left:2px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}.chip.on em{color:inherit;opacity:.7}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tools input{flex:1 1 260px;width:auto}.tools select{flex:0 1 200px;width:auto}
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgb(0 0 0/.08)}
+.card:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.ph{aspect-ratio:4/3;background:var(--soft);display:grid;place-items:center;color:var(--mute);overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute)}
+.tag{color:var(--green);font-weight:600}
+.card h3{font-size:19px}
+.card p{margin:0;font-size:15px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dots{display:inline-flex;gap:3px;align-items:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.dots i.on{background:var(--sand)}
+.empty{text-align:center;padding:60px 16px;color:var(--mute);border:1px dashed var(--line);border-radius:16px}
+.sample{font-size:13px;color:var(--mute);margin-top:18px}
+/* overlays */
+.ov{position:fixed;inset:0;z-index:20;background:rgb(10 14 12/.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
+.panel{background:var(--card);border-radius:18px;width:min(860px,100%);overflow:hidden}
+.dgrid{display:grid;grid-template-columns:1.1fr 1fr}
+.dgrid .ph{aspect-ratio:auto;min-height:320px}
+.dbody{padding:clamp(18px,3vw,28px);display:flex;flex-direction:column;gap:12px}
+.dbody h2{font-size:28px}
+.dbody h4{margin:0;font-size:14px;color:var(--mute);font-weight:500}
+.dbody p{margin:2px 0 0}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}
+.facts dt{color:var(--mute)}.facts dd{margin:0}
+.dact{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+/* form */
+.form{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rate{display:flex;gap:6px}
+.rate button{flex:1;padding:0}
+.rate button.on{background:var(--sand);border-color:var(--sand);color:#1b211d;font-weight:600}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:16px;display:flex;gap:16px;align-items:center;cursor:pointer}
+.drop .ph{width:140px;aspect-ratio:4/3;border-radius:10px;flex:none}
+.drop input{display:none}
+.fbar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px}
+/* present */
+#present{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column}
+.pslide{flex:1;display:grid;grid-template-columns:1.2fr 1fr;min-height:0}
+.pslide .ph{aspect-ratio:auto;height:100%}
+.ptext{padding:clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:center;gap:18px;overflow-y:auto}
+.ptext h2{font-size:clamp(32px,4.5vw,56px)}
+.ptext h4{margin:0 0 4px;font-size:15px;color:var(--green);font-weight:600}
+.ptext p{margin:0;font-size:clamp(17px,1.6vw,21px)}
+.pbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}
+.pbar span{margin-right:auto;color:var(--mute);font-variant-numeric:tabular-nums}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;max-width:calc(100% - 24px)}
+@media(max-width:700px){.dgrid,.pslide{grid-template-columns:1fr}.dgrid .ph{min-height:220px}.pslide .ph{height:42vh}.two{grid-template-columns:1fr}.top .navtxt{display:none}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+</style>
+</head>
+<body>
+
+<!-- หน้าเข้าสู่ระบบ -->
+<section id="login">
+  <form class="lcard" id="loginForm">
+    <div class="mark"><i data-lucide="sprout"></i></div>
+    <div><h1>เทรนด์สินค้าน่าจับตา</h1><p>สินค้าใหม่จากทั่วโลกที่ต่อยอดได้กับวัตถุดิบและไลน์การผลิตของเรา</p></div>
+    <label class="f">รหัสผ่าน<input id="pw" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="loginErr" role="alert"></div>
+    <button class="pri" type="submit" id="loginBtn"><i data-lucide="log-in"></i>เข้าสู่ระบบ</button>
+    <div class="hint" id="demoHint" hidden>โหมดตัวอย่าง: รหัสผู้ดูแลคือ <b>admin</b> รหัสผู้ชมคือ <b>view</b></div>
+  </form>
+</section>
+
+<!-- แอป -->
+<div id="app" hidden>
+  <header class="top"><div class="wrap">
+    <div class="brand"><span class="mark"><i data-lucide="sprout"></i></span><span>เทรนด์สินค้า</span></div>
+    <span class="role" id="roleLbl"></span>
+    <button id="navAdd" class="pri" hidden><i data-lucide="plus"></i><span class="navtxt">เพิ่มสินค้า</span></button>
+    <button id="navPresent"><i data-lucide="presentation"></i><span class="navtxt">นำเสนอ</span></button>
+    <button id="navOut" class="ghost" aria-label="ออกจากระบบ"><i data-lucide="log-out"></i></button>
+  </div></header>
+
+  <main id="catalog">
+    <section class="band hero"><div class="wrap">
+      <h1>เทรนด์สินค้าน่าจับตา</h1>
+      <p id="summary">กำลังโหลด…</p>
+      <div class="chips" id="chips"></div>
+      <div class="tools">
+        <input id="q" type="search" placeholder="ค้นหาชื่อสินค้า ประเทศ หรือไอเดีย" aria-label="ค้นหา">
+        <select id="sort" aria-label="เรียงลำดับ"><option value="new">ใหม่ล่าสุด</option><option value="top">น่าสนใจที่สุด</option></select>
+      </div>
+    </div></section>
+    <section class="band" style="padding-top:0"><div class="wrap">
+      <div class="grid" id="grid"></div>
+      <p class="sample" id="sampleNote" hidden>ข้อมูลในโหมดตัวอย่างเป็นตัวอย่างประกอบ ไม่ใช่ข้อมูลจริง</p>
+    </div></section>
+  </main>
+
+  <main id="formView" hidden>
+    <section class="band"><form class="form" id="pform">
+      <div><h1 id="fTitle" style="font-size:34px">เพิ่มสินค้าที่เจอ</h1><p style="color:var(--mute);margin:6px 0 0">บันทึกแล้วข้อมูลไปที่ Google Sheet และรูปไปที่ Google Drive</p></div>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="เลือกรูปสินค้า">
+        <div class="ph" id="fImg"><i data-lucide="image-plus"></i></div>
+        <div><b>รูปสินค้า</b><br><span style="color:var(--mute);font-size:15px">กดเพื่อเลือกรูป หรือลากไฟล์มาวาง</span></div>
+        <input type="file" id="file" accept="image/*">
+      </div>
+      <label class="f">ชื่อสินค้า *<input id="f-name" required></label>
+      <div class="two">
+        <label class="f">ประเทศ<input id="f-country" placeholder="เช่น ญี่ปุ่น"></label>
+        <label class="f">แบรนด์<input id="f-brand"></label>
+        <label class="f">หมวด<select id="f-category"></select></label>
+        <label class="f">บรรจุภัณฑ์<select id="f-packaging"></select></label>
+      </div>
+      <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:500">ความน่าสนใจ<div class="rate" id="rate"></div></div>
+      <label class="f">ทำไมน่าสนใจ<textarea id="f-why" placeholder="จุดเด่น เทรนด์ที่อยู่เบื้องหลัง กลุ่มลูกค้า"></textarea></label>
+      <label class="f">ไอเดียสำหรับบริษัท<textarea id="f-idea" placeholder="ต่อยอดกับวัตถุดิบหรือไลน์ผลิตไหนได้บ้าง"></textarea></label>
+      <label class="f">ลิงก์แหล่งที่มา<input id="f-source" type="url" placeholder="https://"></label>
+      <div class="fbar">
+        <button type="button" id="fCancel">ยกเลิก</button>
+        <button class="pri" type="submit" id="fSave"><i data-lucide="save"></i>บันทึก</button>
+      </div>
+    </form></section>
+  </main>
+</div>
+
+<!-- รายละเอียด -->
+<div class="ov" id="detail" hidden><div class="panel" id="dPanel"></div></div>
+
+<!-- โหมดนำเสนอ -->
+<div id="present" hidden>
+  <div class="pslide" id="pSlide"></div>
+  <div class="pbar">
+    <span id="pCount"></span>
+    <button id="pPrev" aria-label="ก่อนหน้า"><i data-lucide="chevron-left"></i></button>
+    <button id="pNext" aria-label="ถัดไป"><i data-lucide="chevron-right"></i></button>
+    <button id="pClose"><i data-lucide="x"></i>ปิด</button>
+  </div>
+</div>
+
+<div id="toast" hidden role="status"></div>
+
+<script>
+{
+const CATS=['กะทิและผลิตภัณฑ์มะพร้าว','น้ำมะพร้าวและเครื่องดื่ม','น้ำจิ้มและซอส','ผักผลไม้กระป๋อง','อื่นๆ'];
+const PACKS=['กระป๋อง','ขวดแก้ว','กล่อง UHT','ซองหรือถุง','อื่นๆ'];
+/* ===== ตั้งค่า: วาง Web app URL ของ Apps Script ระหว่างเครื่องหมายคำพูด (เว้นว่าง = โหมดตัวอย่าง) ===== */
+const API_URL='';
+const DEMO=!API_URL;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icons=()=>{try{window.lucide&&lucide.createIcons()}catch(e){}};
+let token=null,role=null,items=[],cat='all',sort='new',q='',editing=null,rating=0,newImage=null,pList=[],pIdx=0,tt=null;
+const imgs={};
+
+/* ---------- โหมดตัวอย่าง (ใช้เมื่อเปิดนอก Apps Script) ---------- */
+function ph(c1,c2,label){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><ellipse cx="200" cy="250" rx="110" ry="16" fill="#000" opacity=".12"/><rect x="150" y="70" width="100" height="175" rx="18" fill="#fff" opacity=".9"/><rect x="150" y="120" width="100" height="60" fill="${c2}" opacity=".85"/><text x="200" y="157" font-family="sans-serif" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">${label}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+const demoImgs={d1:ph('#d9f0e3','#1d6b45','SPARK'),d2:ph('#f4eadb','#8a5a2b','BARISTA'),d3:ph('#eef2f7','#5a7bb5','YOGURT'),d4:ph('#fbe3d6','#c2410c','HOT'),d5:ph('#fff1c9','#d39a2f','MANGO'),d6:ph('#ece6f5','#6b4fa0','POWDER')};
+let demoData=[
+ {id:'s1',createdAt:'2026-11-18',name:'น้ำมะพร้าวสปาร์กลิง',country:'ญี่ปุ่น',brand:'',category:'น้ำมะพร้าวและเครื่องดื่ม',packaging:'กระป๋อง',interest:5,why:'น้ำมะพร้าวอัดก๊าซ หวานน้อย วางตำแหน่งเป็นเครื่องดื่มทดแทนน้ำอัดลมสำหรับคนรักสุขภาพ',idea:'ต่อยอดน้ำมะพร้าวกระป๋องที่มีอยู่ เพิ่มขั้นตอนอัดก๊าซ',source:'',imageId:'d1'},
+ {id:'s2',createdAt:'2026-11-15',name:'กะทิสูตรบาริสตาสำหรับกาแฟ',country:'สหรัฐอเมริกา',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'กล่อง UHT',interest:4,why:'นมจากพืชสำหรับร้านกาแฟ ตีฟองได้ดี ไม่แยกชั้นในกาแฟร้อน',idea:'พัฒนากะทิ UHT สูตรบาริสตา ขายให้ร้านกาแฟและโรงแรม',source:'',imageId:'d2'},
+ {id:'s3',createdAt:'2026-11-12',name:'โยเกิร์ตกะทิ',country:'ออสเตรเลีย',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'อื่นๆ',interest:4,why:'โยเกิร์ตจากพืชเนื้อข้น มีจุลินทรีย์ กลุ่มลูกค้าแพ้นมวัว',idea:'ใช้กะทิเข้มข้นเป็นฐาน ร่วมทุนหรือจ้างผลิตส่วนหมัก',source:'',imageId:'d3'},
+ {id:'s4',createdAt:'2026-11-08',name:'ซอสพริกน้ำผึ้งเผ็ดหวาน',country:'สหรัฐอเมริกา',brand:'',category:'น้ำจิ้มและซอส',packaging:'ขวดแก้ว',interest:3,why:'รสเผ็ดหวานแบบฮอตฮันนี่กำลังนิยมกับพิซซ่าและไก่ทอด',idea:'ปรับสูตรน้ำจิ้มไก่ให้มีโทนน้ำผึ้ง ทำรุ่นพิเศษสำหรับตลาดอเมริกา',source:'',imageId:'d4'},
+ {id:'s5',createdAt:'2026-11-03',name:'มะม่วงในน้ำมะพร้าว',country:'สิงคโปร์',brand:'',category:'ผักผลไม้กระป๋อง',packaging:'กระป๋อง',interest:3,why:'ผลไม้บรรจุในน้ำมะพร้าวแทนน้ำเชื่อม ไม่เติมน้ำตาล',idea:'รวมสองไลน์ที่มีอยู่ ผลไม้กระป๋องกับน้ำมะพร้าว',source:'',imageId:'d5'},
+ {id:'s6',createdAt:'2026-10-28',name:'กะทิผงซองพกพา',country:'เกาหลีใต้',brand:'',category:'กะทิและผลิตภัณฑ์มะพร้าว',packaging:'ซองหรือถุง',interest:2,why:'ซองเล็กชงครั้งเดียว ใช้ในครัวคอนโดและแคมป์ปิ้ง',idea:'กะทิผงขนาดซองเดียวสำหรับตลาดออนไลน์',source:'',imageId:'d6'}];
+const demo={
+  login(pw){if(pw==='admin')return{token:'demo',role:'admin'};if(pw==='view')return{token:'demo-v',role:'viewer'};throw new Error('รหัสผ่านไม่ถูกต้อง')},
+  logout(){return true},
+  listProducts(){return JSON.parse(JSON.stringify(demoData))},
+  getImage(t,id){return demoImgs[id]||''},
+  saveProduct(t,d){
+    let imageId=d.id?(demoData.find(x=>x.id===d.id)||{}).imageId||'':'';
+    if(d.image){imageId='u'+Date.now();demoImgs[imageId]='data:image/jpeg;base64,'+d.image.b64}
+    const row={...d,imageId,interest:Number(d.interest)||0};delete row.image;
+    const i=demoData.findIndex(x=>x.id===d.id);
+    if(i>=0)demoData[i]={...demoData[i],...row};else demoData.unshift({...row,id:'n'+Date.now(),createdAt:new Date().toISOString()});
+    return true},
+  deleteProduct(t,id){demoData=demoData.filter(x=>x.id!==id);return true}
+};
+
+function call(fn,...args){
+  return new Promise((res,rej)=>{
+    if(DEMO){setTimeout(()=>{try{res(demo[fn](...args))}catch(e){rej(e)}},250);return}
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})})
+      .then(r=>r.json()).then(d=>d.ok?res(d.result):rej(new Error(d.error)))
+      .catch(()=>rej(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง')));
+  }).catch(e=>{
+    const m=(e&&e.message)||String(e);
+    if(m.includes('SESSION_EXPIRED')){signOut('หมดเวลาการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่');throw new Error('')}
+    throw new Error(m);
+  });
+}
+function toast(m){if(!m)return;$('#toast').textContent=m;$('#toast').hidden=false;clearTimeout(tt);tt=setTimeout(()=>$('#toast').hidden=true,3500)}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+function store(){try{token?sessionStorage.setItem('tr',JSON.stringify({token,role})):sessionStorage.removeItem('tr')}catch(e){}}
+function signOut(msg){
+  if(token)call('logout',token).catch(()=>{});
+  token=role=null;store();items=[];
+  $('#app').hidden=true;$('#present').hidden=true;$('#detail').hidden=true;$('#login').hidden=false;
+  $('#loginErr').textContent=msg||'';$('#pw').value='';
+}
+async function enter(){
+  $('#login').hidden=true;$('#app').hidden=false;
+  $('#roleLbl').textContent=role==='admin'?'ผู้ดูแล':'ผู้ชม';
+  $('#navAdd').hidden=role!=='admin';
+  $('#sampleNote').hidden=!DEMO;
+  showView('catalog');await load();
+}
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();const b=$('#loginBtn');b.disabled=true;$('#loginErr').textContent='';
+  try{const r=await call('login',$('#pw').value);token=r.token;role=r.role;store();await enter()}
+  catch(err){$('#loginErr').textContent=err.message}
+  finally{b.disabled=false}
+});
+$('#navOut').addEventListener('click',()=>signOut());
+
+/* ---------- แคตตาล็อก ---------- */
+async function load(){
+  $('#summary').textContent='กำลังโหลด…';
+  try{items=await call('listProducts',token);render()}
+  catch(e){$('#summary').textContent='โหลดข้อมูลไม่สำเร็จ';toast(e.message)}
+}
+const dots=n=>`<span class="dots" aria-label="ความน่าสนใจ ${n} จาก 5">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
+function visible(){
+  let v=items.filter(x=>(cat==='all'||x.category===cat)&&(!q||[x.name,x.country,x.brand,x.why,x.idea].join(' ').toLowerCase().includes(q)));
+  if(sort==='top')v=[...v].sort((a,b)=>b.interest-a.interest);
+  return v;
+}
+function render(){
+  const countries=new Set(items.map(x=>x.country.trim()).filter(Boolean));
+  $('#summary').textContent=items.length?`${items.length} สินค้า จาก ${countries.size} ประเทศ`:'ยังไม่มีสินค้า';
+  const cats=['all',...CATS.filter(c=>items.some(x=>x.category===c)),...new Set(items.map(x=>x.category).filter(c=>c&&!CATS.includes(c)))];
+  $('#chips').innerHTML=cats.map(c=>{const n=c==='all'?items.length:items.filter(x=>x.category===c).length;return `<button class="chip ${c===cat?'on':''}" data-cat="${esc(c)}">${c==='all'?'ทั้งหมด':esc(c)} <em>${n}</em></button>`}).join('');
+  const v=visible();
+  $('#grid').innerHTML=v.length?v.map(x=>`<button class="card" data-id="${esc(x.id)}">
+    <div class="ph">${x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
+    <div class="cb"><div class="meta"><span class="tag">${esc(x.category||'ไม่ระบุหมวด')}</span><span>${esc(x.country)}</span></div>
+    <h3>${esc(x.name)}</h3>${x.why?`<p>${esc(x.why)}</p>`:''}${x.interest?dots(x.interest):''}</div></button>`).join('')
+    :`<div class="empty" style="grid-column:1/-1">${items.length?'ไม่พบสินค้าที่ตรงกับการค้นหา':role==='admin'?'ยังไม่มีสินค้า กด "เพิ่มสินค้า" เพื่อเริ่ม':'ยังไม่มีสินค้า'}</div>`;
+  icons();fillImages(document);
+}
+function getImg(id){if(!imgs[id])imgs[id]=call('getImage',token,id).catch(()=>{delete imgs[id];return ''});return imgs[id]}
+function fillImages(root){root.querySelectorAll('img[data-img]:not([src])').forEach(async el=>{const u=await getImg(el.dataset.img);if(u)el.src=u})}
+
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(b){cat=b.dataset.cat;render()}});
+$('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
+$('#sort').addEventListener('change',e=>{sort=e.target.value;render()});
+$('#grid').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)openDetail(c.dataset.id)});
+
+/* ---------- รายละเอียด ---------- */
+function openDetail(id){
+  const x=items.find(y=>y.id===id);if(!x)return;
+  const link=/^https?:\/\//.test(x.source)?`<a class="btn" href="${esc(x.source)}" target="_blank" rel="noopener"><i data-lucide="external-link"></i>แหล่งที่มา</a>`:'';
+  const date=x.createdAt?new Date(x.createdAt):null;
+  $('#dPanel').innerHTML=`<div class="dgrid"><div class="ph">${x.imageId?`<img alt="${esc(x.name)}" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
+  <div class="dbody"><div class="meta"><span class="tag">${esc(x.category)}</span>${x.interest?dots(x.interest):''}</div>
+  <h2>${esc(x.name)}</h2>
+  <dl class="facts"><dt>ประเทศ</dt><dd>${esc(x.country)||'-'}</dd><dt>แบรนด์</dt><dd>${esc(x.brand)||'-'}</dd><dt>บรรจุภัณฑ์</dt><dd>${esc(x.packaging)||'-'}</dd>${date&&!isNaN(date)?`<dt>วันที่บันทึก</dt><dd>${date.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}</dd>`:''}</dl>
+  ${x.why?`<div><h4>ทำไมน่าสนใจ</h4><p>${esc(x.why)}</p></div>`:''}
+  ${x.idea?`<div><h4>ไอเดียสำหรับบริษัท</h4><p>${esc(x.idea)}</p></div>`:''}
+  <div class="dact">${link}${role==='admin'?`<button data-d="edit"><i data-lucide="pencil"></i>แก้ไข</button><button class="danger" data-d="del"><i data-lucide="trash-2"></i>ลบ</button>`:''}<button class="ghost" data-d="close" style="margin-left:auto">ปิด</button></div></div></div>`;
+  $('#dPanel').dataset.id=id;$('#detail').hidden=false;icons();fillImages($('#dPanel'));
+}
+$('#detail').addEventListener('click',async e=>{
+  if(e.target===$('#detail'))return($('#detail').hidden=true);
+  const b=e.target.closest('[data-d]');if(!b)return;
+  const id=$('#dPanel').dataset.id;
+  if(b.dataset.d==='close')$('#detail').hidden=true;
+  if(b.dataset.d==='edit'){$('#detail').hidden=true;openForm(items.find(x=>x.id===id))}
+  if(b.dataset.d==='del'){
+    if(!b.dataset.sure){b.dataset.sure='1';b.innerHTML='กดอีกครั้งเพื่อยืนยันการลบ';return}
+    b.disabled=true;
+    try{await call('deleteProduct',token,id);$('#detail').hidden=true;toast('ลบแล้ว');await load()}catch(err){toast(err.message);b.disabled=false}
+  }
+});
+
+/* ---------- ฟอร์ม ---------- */
+$('#f-category').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+$('#f-packaging').innerHTML=PACKS.map(c=>`<option>${c}</option>`).join('');
+function drawRate(){$('#rate').innerHTML=[1,2,3,4,5].map(i=>`<button type="button" data-r="${i}" class="${i===rating?'on':''}" aria-pressed="${i===rating}">${i}</button>`).join('')}
+$('#rate').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){rating=Number(b.dataset.r)===rating?0:Number(b.dataset.r);drawRate()}});
+function showView(v){$('#catalog').hidden=v!=='catalog';$('#formView').hidden=v!=='form';window.scrollTo(0,0)}
+function openForm(x){
+  editing=x?x.id:null;newImage=null;rating=x?x.interest:0;
+  ['name','country','brand','why','idea','source'].forEach(k=>$('#f-'+k).value=x?x[k]:'');
+  $('#f-category').value=x&&CATS.includes(x.category)?x.category:CATS[0];
+  $('#f-packaging').value=x&&PACKS.includes(x.packaging)?x.packaging:PACKS[0];
+  $('#fTitle').textContent=x?'แก้ไขสินค้า':'เพิ่มสินค้าที่เจอ';
+  $('#fImg').innerHTML=x&&x.imageId?`<img alt="" data-img="${esc(x.imageId)}">`:'<i data-lucide="image-plus"></i>';
+  drawRate();showView('form');icons();fillImages($('#fImg'));$('#f-name').focus();
+}
+$('#navAdd').addEventListener('click',()=>openForm());
+$('#fCancel').addEventListener('click',()=>showView('catalog'));
+function resize(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.85))};img.onerror=()=>rej(new Error('อ่านไฟล์รูปไม่ได้'));img.src=URL.createObjectURL(file)})}
+async function takeFile(f){if(!f||!f.type.startsWith('image/'))return toast('กรุณาเลือกไฟล์รูป');try{newImage=await resize(f);$('#fImg').innerHTML=`<img alt="" src="${newImage}">`}catch(e){toast(e.message)}}
+$('#drop').addEventListener('click',()=>$('#file').click());
+$('#drop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click()}});
+$('#file').addEventListener('change',e=>takeFile(e.target.files[0]));
+$('#drop').addEventListener('dragover',e=>e.preventDefault());
+$('#drop').addEventListener('drop',e=>{e.preventDefault();takeFile(e.dataTransfer.files[0])});
+$('#pform').addEventListener('submit',async e=>{
+  e.preventDefault();const b=$('#fSave');b.disabled=true;b.textContent='กำลังบันทึก…';
+  const d={id:editing,interest:rating};['name','country','brand','category','packaging','why','idea','source'].forEach(k=>d[k]=$('#f-'+k).value.trim());
+  if(newImage)d.image={b64:newImage.split(',')[1]};
+  try{await call('saveProduct',token,d);toast(editing?'บันทึกการแก้ไขแล้ว':'เพิ่มสินค้าแล้ว');showView('catalog');await load()}
+  catch(err){toast(err.message||'บันทึกไม่สำเร็จ')}
+  finally{b.disabled=false;b.innerHTML='<i data-lucide="save"></i>บันทึก';icons()}
+});
+
+/* ---------- โหมดนำเสนอ ---------- */
+function slide(){
+  const x=pList[pIdx];if(!x)return;
+  $('#pSlide').innerHTML=`<div class="ph">${x.imageId?`<img alt="${esc(x.name)}" data-img="${esc(x.imageId)}">`:'<i data-lucide="image"></i>'}</div>
+  <div class="ptext"><div class="meta" style="font-size:15px"><span class="tag">${esc(x.category)}</span><span>${esc(x.country)}${x.packaging?' · '+esc(x.packaging):''}</span></div>
+  <h2>${esc(x.name)}</h2>${x.interest?dots(x.interest):''}
+  ${x.why?`<div><h4>ทำไมน่าสนใจ</h4><p>${esc(x.why)}</p></div>`:''}
+  ${x.idea?`<div><h4>ไอเดียสำหรับบริษัท</h4><p>${esc(x.idea)}</p></div>`:''}</div>`;
+  $('#pCount').textContent=`${pIdx+1} / ${pList.length}`;
+  $('#pPrev').disabled=pIdx===0;$('#pNext').disabled=pIdx>=pList.length-1;
+  icons();fillImages($('#pSlide'));
+  pList.slice(pIdx+1,pIdx+3).forEach(y=>y.imageId&&getImg(y.imageId));
+}
+$('#navPresent').addEventListener('click',()=>{
+  pList=visible();if(!pList.length)return toast('ไม่มีสินค้าให้นำเสนอ');
+  pIdx=0;$('#present').hidden=false;slide();
+  try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}
+});
+function closePresent(){$('#present').hidden=true;try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}
+$('#pPrev').addEventListener('click',()=>{if(pIdx>0){pIdx--;slide()}});
+$('#pNext').addEventListener('click',()=>{if(pIdx<pList.length-1){pIdx++;slide()}});
+$('#pClose').addEventListener('click',closePresent);
+document.addEventListener('keydown',e=>{
+  if(!$('#present').hidden){if(e.key==='ArrowRight')$('#pNext').click();if(e.key==='ArrowLeft')$('#pPrev').click();if(e.key==='Escape')closePresent();return}
+  if(e.key==='Escape')$('#detail').hidden=true;
+});
+
+/* ---------- เริ่มต้น ---------- */
+$('#demoHint').hidden=!DEMO;icons();
+try{const s=JSON.parse(sessionStorage.getItem('tr')||'null');if(s&&s.token){token=s.token;role=s.role;enter()}}catch(e){}
+}
+</script>
+</body>
+</html>
